@@ -1,0 +1,3100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#0f0c29">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="神剑仙域">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="神剑仙域 — 锻造神剑、吞噬废料、探索地图、挑战世界BOSS、组建公会、交易装备">
+<title>神剑仙域 - 吞噬与秘剑</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; min-height: 100vh; padding: 10px; overflow-x: hidden; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(0,0,0,0.5); border-radius: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .header-bar h1 { font-size: 1.8rem; color: #ffd700; text-shadow: 0 0 8px #ff8c00; }
+        .save-load-btns button { margin-left: 10px; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-save { background: #38a169; color: white; }
+        .btn-new { background: #e53e3e; color: white; }
+        .btn-export { background: #3182ce; color: white; }
+        .btn-import { background: #805ad5; color: white; }
+        .btn-slots { background: #d69e2e; color: white; }
+
+        .container { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; max-width: 1400px; margin: 0 auto; }
+        @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } }
+        .panel { background: rgba(0, 0, 0, 0.7); border-radius: 15px; padding: 20px; border: 1px solid #444; box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 15px; position: relative; }
+        h2, h3 { color: #ffd700; text-shadow: 0 0 8px #ff8c00; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 5px;}
+
+        /* 神剑展示 */
+        .sword-display { text-align: center; }
+        .sword-img-container { position: relative; display: inline-block; margin-bottom: 15px; }
+        .sword-img { font-size: 100px; filter: drop-shadow(0 0 10px gold); transition: all 0.3s; }
+        .sword-img:hover { transform: scale(1.1); }
+        .particle-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .particle { position: absolute; width: 8px; height: 8px; background: gold; border-radius: 50%; opacity: 0; animation: floatParticle 2s infinite; }
+        @keyframes floatParticle { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-100px) scale(0); opacity: 0; } }
+
+        .sword-name { font-size: 1.8rem; color: #ffd700; margin-bottom: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; }
+        .stat-label { font-size: 0.8rem; color: #aaa; }
+        .stat-value { font-size: 1.3rem; font-weight: bold; }
+        .stat-value.atk { color: #4fd1c7; } .stat-value.crit { color: #e53e3e; } .stat-value.dodge { color: #9f7aea; } .stat-value.block { color: #3182ce; } .stat-value.sp { color: #ffd700; }
+
+        /* 主按钮区 */
+        .main-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .btn-action-main { padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.2s; color: #fff; text-align: center; }
+        .btn-action-main:hover { transform: translateY(-2px); }
+        .btn-inventory { background: linear-gradient(145deg, #3182ce, #2c5282); }
+        .btn-forge { background: linear-gradient(145deg, #d69e2e, #b7791f); }
+        .btn-talent { background: linear-gradient(145deg, #805ad5, #6b46c1); }
+
+        /* 自动化控制面板 */
+        .auto-panel { border-color: #4fd1c7 !important; }
+        .auto-panel h3 { color: #4fd1c7; }
+        .auto-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .auto-row { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .auto-row label { cursor: pointer; }
+        .auto-btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 0.85rem; }
+        .auto-btn.on { background: linear-gradient(145deg, #38a169, #276749); }
+        .auto-btn.off { background: linear-gradient(145deg, #e53e3e, #9b2c2c); }
+        .auto-btn:hover { transform: translateY(-1px); }
+        .auto-status { font-size: 0.8rem; color: #68d391; margin-top: 5px; }
+        .auto-status.stopped { color: #e53e3e; }
+
+        .smart-upgrade-panel { background: rgba(255,255,255,0.05); border: 1px solid #555; border-radius: 8px; padding: 10px; margin-top: 10px; }
+        .smart-upgrade-panel h4 { font-size: 0.85rem; color: #ffd700; margin-bottom: 8px; }
+        .smart-upgrade-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.8rem; }
+        .smart-upgrade-row input[type="number"] { width: 80px; padding: 3px 6px; border-radius: 4px; border: 1px solid #666; background: #333; color: white; }
+        .smart-upgrade-row input[type="checkbox"] { cursor: pointer; }
+
+        /* 材料区 */
+        .materials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; }
+        .mat-item { background: rgba(255,255,255,0.05); border: 1px solid #555; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; }
+        .mat-icon { font-size: 1.5rem; }
+        .mat-name { font-size: 0.7rem; margin: 3px 0; color: #ccc; }
+        .mat-count { font-size: 1rem; font-weight: bold; color: #ffd700; }
+
+        /* 日志 */
+        .log-box { height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; font-size: 0.85rem; }
+        .log-entry { padding: 4px 0; border-bottom: 1px dashed #333; }
+        .log-time { color: #6b46c1; margin-right: 5px; }
+        .log-normal { color: #fff; } .log-crit { color: #ff8c00; font-weight: bold; } .log-dodge { color: #9f7aea; } .log-block { color: #3182ce; } .log-elem { color: #4fd1c7; font-weight: bold; } .log-reward { color: #68d391; } .log-secret { color: #e53e3e; font-weight: bold; } .log-auto { color: #4fd1c7; font-style: italic; } .log-guild { color: #f6e05e; } .log-trade { color: #9f7aea; } .log-raid { color: #fc8181; }
+        .log-filters { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+        .log-filters span { font-size: 0.8rem; color: #aaa; margin-right: 5px; }
+        .log-filter-btn { padding: 3px 8px; font-size: 0.7rem; border: 1px solid #555; border-radius: 4px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer; }
+        .log-filter-btn.active { background: #4fd1c7; color: #000; font-weight: bold; border-color: #4fd1c7; }
+        .log-filter-btn:hover { border-color: #4fd1c7; }
+        .log-export-csv { padding: 3px 8px; font-size: 0.7rem; border: none; border-radius: 4px; background: #38a169; color: white; cursor: pointer; margin-left: auto; }
+
+        /* 地图 */
+        .map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .map-node { background: rgba(255,255,255,0.05); border: 1px solid #555; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .map-node:hover { border-color: #4fd1c7; background: rgba(79, 209, 199, 0.1); }
+        .map-node.recommended { border-color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+        .map-node.recommended::after { content: "⭐ 推荐"; display: block; font-size: 0.7rem; color: #ffd700; margin-top: 3px; }
+        .map-icon { font-size: 2rem; }
+        .map-name { font-weight: bold; margin: 5px 0; }
+        .map-cost { font-size: 0.8rem; color: #f6e05e; }
+        #stamina-display { text-align: center; margin-bottom: 10px; color: #68d391; }
+        .stamina-bar-container { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .stamina-bar-fill { height: 100%; background: linear-gradient(90deg, #68d391, #4fd1c7); width: 100%; transition: width 0.5s; }
+
+        /* 世界BOSS */
+        .boss-panel { border-color: #e53e3e !important; box-shadow: 0 0 15px rgba(229, 62, 62, 0.5); }
+        .boss-hp-bar { height: 25px; background: #333; border-radius: 10px; overflow: hidden; margin: 10px 0; border: 1px solid #666; }
+        .boss-hp-fill { height: 100%; background: linear-gradient(90deg, #e53e3e, #ff8c00); width: 100%; transition: width 0.5s; }
+        .boss-timer { font-size: 1.2rem; color: #ffd700; text-align: center; margin-bottom: 10px; }
+        .boss-rank-list { list-style: none; font-size: 0.8rem; max-height: 100px; overflow-y: auto; }
+        .boss-rank-list li { padding: 3px 0; border-bottom: 1px dotted #444; display: flex; justify-content: space-between; }
+
+        /* 任务面板 */
+        .quest-panel { border-color: #38a169 !important; }
+        .quest-list { list-style: none; }
+        .quest-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 5px; margin-bottom: 5px; font-size: 0.8rem; }
+        .quest-item.completed { border-left: 3px solid #38a169; }
+        .quest-progress { height: 5px; background: #333; border-radius: 3px; margin-top: 5px; overflow: hidden; }
+        .quest-progress-bar { height: 100%; background: #38a169; width: 0%; }
+        .quest-reward { color: #ffd700; font-size: 0.7rem; margin-top: 3px; }
+
+        /* 公会面板 */
+        .guild-panel { border-color: #f6e05e !important; }
+        .guild-panel h3 { color: #f6e05e; }
+        .raid-panel { border-color: #fc8181 !important; }
+        .raid-panel h3 { color: #fc8181; }
+        .trade-panel { border-color: #9f7aea !important; }
+        .trade-panel h3 { color: #9f7aea; }
+        .leaderboard-panel { border-color: #4fd1c7 !important; }
+        .leaderboard-panel h3 { color: #4fd1c7; }
+
+        /* 模态框 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 30px; border-radius: 15px; border: 2px solid #ffd700; width: 95%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { color: #ffd700; margin: 0; }
+        .close-btn { font-size: 2rem; cursor: pointer; color: #aaa; }
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        .inv-slot { background: rgba(255,255,255,0.05); border: 2px solid #444; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s; position: relative; }
+        .inv-slot:hover { border-color: #ffd700; transform: scale(1.03); }
+        .inv-slot.equipped { border-color: #4fd1c7; box-shadow: 0 0 10px #4fd1c7; }
+        .inv-slot.hidden-sword { border-color: #e53e3e; background: rgba(229, 62, 62, 0.1); }
+        .inv-icon { font-size: 2.5rem; }
+        .inv-name { font-weight: bold; margin: 5px 0; }
+        .inv-stats { font-size: 0.8rem; color: #ccc; }
+        .inv-element { font-size: 0.7rem; color: #ffd700; margin-top: 5px; }
+        .inv-actions { margin-top: 10px; display: flex; gap: 5px; }
+        .inv-btn { flex: 1; padding: 5px; font-size: 0.7rem; border: none; border-radius: 4px; cursor: pointer; color: white; }
+        .inv-btn.equip { background: #3182ce; }
+        .inv-btn.devour { background: #e53e3e; }
+        .inv-btn.devour:disabled { background: #666; cursor: not-allowed; }
+        .gear-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .gear-slot { background: rgba(255,255,255,0.05); border: 2px dashed #555; border-radius: 10px; padding: 15px; text-align: center; min-height: 100px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
+        .gear-slot.equipped { border-style: solid; border-color: #ffd700; }
+        .gear-slot.empty .gear-icon { color: #444; }
+        .gear-icon { font-size: 2rem; }
+        .gear-name { font-size: 0.8rem; color: #ccc; margin-top: 5px; }
+
+        /* 锻造批量 */
+        .forge-batch-panel { background: rgba(255,255,255,0.05); border: 1px solid #d69e2e; border-radius: 8px; padding: 10px; margin-bottom: 15px; }
+        .forge-batch-panel h4 { font-size: 0.85rem; color: #d69e2e; margin-bottom: 8px; }
+        .forge-batch-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.8rem; }
+        .forge-batch-row input[type="number"] { width: 70px; padding: 3px 6px; border-radius: 4px; border: 1px solid #666; background: #333; color: white; }
+        .forge-batch-btn { padding: 6px 12px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; }
+        .forge-batch-btn:hover { transform: translateY(-1px); }
+
+        /* 存档槽位 */
+        .save-slots-panel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+        .save-slot { background: rgba(255,255,255,0.05); border: 1px solid #555; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .save-slot:hover { border-color: #ffd700; }
+        .save-slot.active { border-color: #4fd1c7; background: rgba(79, 209, 199, 0.1); }
+        .save-slot-name { font-size: 0.8rem; font-weight: bold; color: #ffd700; }
+        .save-slot-info { font-size: 0.7rem; color: #aaa; margin-top: 3px; }
+
+        .import-area { margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border: 1px dashed #805ad5; border-radius: 8px; text-align: center; }
+        .import-area input[type="file"] { display: none; }
+        .import-label { cursor: pointer; color: #805ad5; font-weight: bold; font-size: 0.85rem; }
+
+        /* 特效层 */
+        #effect-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+        .damage-popup { position: absolute; font-size: 1.5rem; font-weight: bold; color: white; text-shadow: 1px 1px 2px black; animation: popup 1s forwards; }
+        .damage-popup.crit { color: #ff4500; font-size: 2.5rem; }
+        .crit-text { position: absolute; font-size: 3rem; font-weight: bold; color: #ff4500; text-shadow: 2px 2px 4px black; animation: critPopup 1s forwards; }
+        @keyframes popup { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+        @keyframes critPopup { 0% { opacity: 1; transform: scale(1); } 50% { transform: scale(1.5); } 100% { opacity: 0; transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes forgeFlash { 0% { box-shadow: 0 0 0px gold; } 50% { box-shadow: 0 0 100px gold; } 100% { box-shadow: 0 0 0px gold; } }
+
+        /* 离线报告 */
+        #offline-report { text-align: left; }
+        #offline-report h3 { color: #4fd1c7; }
+        #offline-report p { margin: 5px 0; }
+
+        /* 确认弹窗 */
+        .confirm-box { background: rgba(255,255,255,0.1); border: 1px solid #ffd700; border-radius: 8px; padding: 15px; margin: 10px 0; text-align: center; }
+        .confirm-box p { margin-bottom: 10px; }
+        .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+        .confirm-btn { padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; }
+        .confirm-btn.yes { background: #38a169; }
+        .confirm-btn.no { background: #e53e3e; }
+
+        /* 自动战斗指示器 */
+        .auto-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #e53e3e; margin-left: 5px; vertical-align: middle; }
+        .auto-indicator.active { background: #68d391; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        /* Tab 导航 */
+        .tab-nav { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
+        .tab-btn { padding: 6px 14px; font-size: 0.8rem; border: 1px solid #555; border-radius: 6px; background: rgba(255,255,255,0.05); color: #ccc; cursor: pointer; }
+        .tab-btn.active { background: #4fd1c7; color: #000; font-weight: bold; border-color: #4fd1c7; }
+    </style>
+
+    <!-- ========== 云端同步配置 ========== -->
+    <!-- 改成你自己的 Supabase 项目信息 -->
+    <script>
+        window.SUPABASE_URL = 'https://cmurxklyvvacrvetabmt.supabase.co/rest/v1/';
+        window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtdXJ4a2x5dnZhY3J2ZXRhYm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMjIxMzEsImV4cCI6MjEwMDc5ODEzMX0.9qng6tWHrrVY_KlylnHVP78prkR-s86YaVuLmWdJRUY';
+    </script>
+    <!-- ========== 云端同步模块 ========== -->
+    <script>
+/* ============================================================
+ * cloud-sync.js  —  神剑仙域 云端同步模块
+ * 职责：封装 Supabase 调用，提供简洁 API 给 game.js 使用
+ * 依赖：全局变量 window.SUPABASE_URL / window.SUPABASE_ANON_KEY
+ *        以及全局 supabase（通过 CDN 加载）
+ * ============================================================ */
+
+(function (global) {
+    'use strict';
+
+    const TABLES = {
+        profiles:   'profiles',
+        saves:      'saves',
+        leaderboard:'leaderboard',
+        guilds:     'guilds',
+    };
+
+    // ---------- 内部状态 ----------
+    let _client = null;          // supabase client
+    let _nickname = null;        // 当前登录昵称
+    let _online = false;         // 是否成功连上 Supabase
+    let _lastSyncAt = null;      // 上次同步时间
+    let _saveTimer = null;       // 自动保存定时器
+
+    // ---------- 初始化 ----------
+    async function init() {
+        const url  = global.SUPABASE_URL;
+        const anon = global.SUPABASE_ANON_KEY;
+
+        if (!url || !anon) {
+            console.warn('[CloudSync] 未配置 SUPABASE_URL/ANON_KEY，降级为本地模式');
+            return false;
+        }
+
+        // 动态加载 Supabase JS SDK（CDN）
+        if (!global.supabase) {
+            await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+        }
+
+        try {
+            _client = global.supabase.createClient(url, anon, {
+                auth: { persistSession: false }  // 我们用昵称，不走 supabase auth
+            });
+
+            // 探活：查一条数据
+            const { error } = await _client.from(TABLES.profiles).select('id').limit(1);
+            if (error) throw error;
+            _online = true;
+            console.log('[CloudSync] ✅ 已连接 Supabase');
+            return true;
+        } catch (e) {
+            console.warn('[CloudSync] 连接失败，降级为本地模式：', e.message);
+            _online = false;
+            return false;
+        }
+    }
+
+    // ---------- 工具：动态加载脚本 ----------
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    // ---------- 登录（昵称） ----------
+    async function loginByNickname(nickname) {
+        if (!nickname || nickname.trim().length < 1) {
+            throw new Error('昵称不能为空');
+        }
+        _nickname = nickname.trim().slice(0, 16);
+
+        if (!_online) return { online: false, nickname: _nickname };
+
+        // upsert 玩家档案
+        const { error } = await _client
+            .from(TABLES.profiles)
+            .upsert({ nickname: _nickname }, { onConflict: 'nickname' });
+
+        if (error) throw error;
+        console.log('[CloudSync] 登录为：', _nickname);
+        return { online: true, nickname: _nickname };
+    }
+
+    // ---------- 上传存档 ----------
+    async function uploadSave(stateObj) {
+        if (!_online || !_nickname) return { ok: false, reason: 'offline' };
+
+        const payload = {
+            nickname: _nickname,
+            state_json: JSON.parse(JSON.stringify(stateObj)),  // 深拷贝
+        };
+
+        const { error } = await _client
+            .from(TABLES.saves)
+            .upsert(payload, { onConflict: 'nickname' });
+
+        if (error) {
+            console.warn('[CloudSync] 上传失败：', error.message);
+            return { ok: false, reason: error.message };
+        }
+
+        _lastSyncAt = new Date();
+        console.log('[CloudSync] ☁️ 存档已上传', _lastSyncAt.toLocaleTimeString());
+        return { ok: true, at: _lastSyncAt };
+    }
+
+    // ---------- 下载存档 ----------
+    async function downloadSave() {
+        if (!_online || !_nickname) return { ok: false, reason: 'offline' };
+
+        const { data, error } = await _client
+            .from(TABLES.saves)
+            .select('state_json, updated_at')
+            .eq('nickname', _nickname)
+            .maybeSingle();
+
+        if (error) {
+            console.warn('[CloudSync] 下载失败：', error.message);
+            return { ok: false, reason: error.message };
+        }
+
+        if (!data) return { ok: false, reason: 'no_save' };
+
+        return { ok: true, state: data.state_json, updatedAt: data.updated_at };
+    }
+
+    // ---------- 提交排行榜 ----------
+    async function submitLeaderboard(bossName, damage) {
+        if (!_online || !_nickname) return { ok: false };
+
+        const { error } = await _client
+            .from(TABLES.leaderboard)
+            .insert({ nickname: _nickname, boss_name: bossName, max_damage: damage });
+
+        if (error) {
+            console.warn('[CloudSync] 排行榜提交失败：', error.message);
+            return { ok: false };
+        }
+        return { ok: true };
+    }
+
+    // ---------- 拉取排行榜 ----------
+    async function fetchLeaderboard(bossName, limit = 20) {
+        if (!_online) return { ok: false, data: [] };
+
+        let q = _client.from(TABLES.leaderboard).select('*').order('max_damage', { ascending: false }).limit(limit);
+        if (bossName) q = q.eq('boss_name', bossName);
+
+        const { data, error } = await q;
+        if (error) return { ok: false, data: [] };
+        return { ok: true, data };
+    }
+
+    // ---------- 公会：创建 ----------
+    async function createGuild(name, leader) {
+        if (!_online) return { ok: false };
+        const { error } = await _client.from(TABLES.guilds).insert({
+            name, leader, members: [leader], treasury: {}, tech: {}
+        });
+        return { ok: !error, error: error?.message };
+    }
+
+    // ---------- 公会：读取 ----------
+    async function fetchGuild(name) {
+        if (!_online) return { ok: false };
+        const { data, error } = await _client
+            .from(TABLES.guilds).select('*').eq('name', name).maybeSingle();
+        return { ok: !error && !!data, data };
+    }
+
+    // ---------- 公会：更新 ----------
+    async function updateGuild(name, patch) {
+        if (!_online) return { ok: false };
+        const { error } = await _client.from(TABLES.guilds).update(patch).eq('name', name);
+        return { ok: !error };
+    }
+
+    // ---------- 自动保存（游戏内定时调用） ----------
+    function startAutoSave(getStateFn, intervalMs = 30000) {
+        stopAutoSave();
+        _saveTimer = setInterval(async () => {
+            if (!getStateFn) return;
+            await uploadSave(getStateFn());
+        }, intervalMs);
+    }
+
+    function stopAutoSave() {
+        if (_saveTimer) { clearInterval(_saveTimer); _saveTimer = null; }
+    }
+
+    // ---------- 状态查询 ----------
+    function isOnline()    { return _online; }
+    function getNickname() { return _nickname; }
+    function getLastSync() { return _lastSyncAt; }
+
+    // ---------- 暴露 API ----------
+    global.CloudSync = {
+        init, loginByNickname,
+        uploadSave, downloadSave,
+        submitLeaderboard, fetchLeaderboard,
+        createGuild, fetchGuild, updateGuild,
+        startAutoSave, stopAutoSave,
+        isOnline, getNickname, getLastSync,
+        TABLES,
+    };
+
+})(window);
+
+    </script>
+    <style>
+        /* 云端登录面板 */
+        .cloud-login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        .cloud-login-box { background: linear-gradient(135deg, #1a1a3e, #302b63); border: 2px solid #4fd1c7; border-radius: 16px; padding: 30px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 0 40px rgba(79,209,199,0.4); }
+        .cloud-login-box h2 { color: #4fd1c7; margin-bottom: 8px; font-size: 1.4rem; }
+        .cloud-login-box p { color: #aaa; font-size: 0.8rem; margin-bottom: 18px; }
+        .cloud-login-box input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #555; background: #222; color: #fff; font-size: 1rem; margin-bottom: 12px; text-align: center; }
+        .cloud-login-box button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
+        .cloud-btn-login { background: linear-gradient(145deg, #4fd1c7, #319795); color: #0f0c29; }
+        .cloud-btn-offline { background: transparent; color: #888; border: 1px solid #555 !important; font-size: 0.85rem; }
+        .cloud-status-bar { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0,0,0,0.6); border-radius: 20px; font-size: 0.75rem; }
+        .cloud-dot { width: 8px; height: 8px; border-radius: 50%; background: #e53e3e; }
+        .cloud-dot.online { background: #4fd1c7; box-shadow: 0 0 6px #4fd1c7; }
+        .cloud-btn-sync { background: #4fd1c7; color: #0f0c29; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- 云端登录弹窗 -->
+    <div id="cloud-login-overlay" class="cloud-login-overlay">
+        <div class="cloud-login-box">
+            <h2>☁️ 神剑仙域</h2>
+            <p>输入昵称登录云端，多设备同步存档</p>
+            <input id="cloud-nickname-input" placeholder="取一个昵称（最多16字）" maxlength="16" autocomplete="off">
+            <button class="cloud-btn-login" onclick="CloudUI.tryLogin()">⚔️ 进入游戏</button>
+            <button class="cloud-btn-offline" onclick="CloudUI.enterOffline()">离线游玩（不保存云端）</button>
+            <p style="margin-top:14px;font-size:0.7rem;color:#666;">首次使用需配置 Supabase，详见 README</p>
+        </div>
+    </div>
+
+    <div id="effect-layer"></div>
+    <div class="header-bar">
+        <h1>⚔️ 神剑仙域 · 吞噬与秘剑 ⚔️</h1>
+        <div>
+            
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div id="cloud-status-bar" class="cloud-status-bar">
+                <div id="cloud-dot" class="cloud-dot"></div>
+                <span id="cloud-status-text">连接中…</span>
+            </div>
+            <button id="cloud-btn-sync" class="cloud-btn-sync" onclick="CloudUI.manualSync()">☁️ 同步</button>
+            <button id="cloud-btn-relogin" class="cloud-btn-sync" style="background:#805ad5;" onclick="CloudUI.showLogin()">🔑 切换</button>
+        </div>
+
+            <span>技能点: <strong id="sp-counter">0</strong></span>
+            <button class="btn-save" onclick="openSaveModal()">💾 存档管理</button>
+            <button class="btn-new" onclick="Game.newGame()">🔄 新游戏</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 神剑与属性 -->
+            <div class="panel sword-display">
+                <div class="sword-img-container">
+                    <div class="sword-img" id="sword-icon">🗡️</div>
+                    <div class="particle-effect" id="particle-effect"></div>
+                </div>
+                <div class="sword-name" id="sword-name">凡铁剑</div>
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="stat-label">攻击力</div><div class="stat-value atk" id="stat-attack">10</div></div>
+                    <div class="stat-box"><div class="stat-label">暴击率</div><div class="stat-value crit" id="stat-crit">0%</div></div>
+                    <div class="stat-box"><div class="stat-label">闪避率</div><div class="stat-value dodge" id="stat-dodge">0%</div></div>
+                    <div class="stat-box"><div class="stat-label">技能点</div><div class="stat-value sp" id="stat-sp">0</div></div>
+                </div>
+                <div class="main-actions">
+                    <button class="btn-action-main btn-inventory" onclick="Game.openInventory()">🎒 整理背包</button>
+                    <button class="btn-action-main btn-forge" onclick="Game.openForgeModal(Game.state)">🔨 打开锻造炉</button>
+                    <button class="btn-action-main btn-talent" onclick="Game.openTalentModal(Game.state)">⚡ 技能天赋树</button>
+                </div>
+            </div>
+
+            <!-- 自动化控制面板 -->
+            <div class="panel auto-panel">
+                <h3>🤖 自动化控制中心 <span class="auto-indicator" id="auto-indicator"></span></h3>
+                <div class="auto-controls">
+                    <div>
+                        <button class="auto-btn off" id="btn-auto-fight" onclick="Game.toggleAutoFight()">⚡ 自动战斗: 关</button>
+                        <span style="font-size:0.75rem; color:#aaa; margin-left:5px;">间隔: <input type="number" id="auto-fight-interval" value="500" min="100" max="5000" step="100" style="width:60px; padding:2px; border-radius:3px; border:1px solid #666; background:#333; color:white;">ms</span>
+                    </div>
+                    <div>
+                        <button class="auto-btn off" id="btn-auto-explore" onclick="Game.toggleAutoExplore()">🗺️ 自动探索: 关</button>
+                    </div>
+                </div>
+                <div class="smart-upgrade-panel">
+                    <h4>🔧 智能升级主剑</h4>
+                    <div class="smart-upgrade-row">
+                        <input type="checkbox" id="smart-upgrade-enabled" onchange="Game.onSmartUpgradeChange()">
+                        <label for="smart-upgrade-enabled">启用智能升级</label>
+                    </div>
+                    <div class="smart-upgrade-row">
+                        <label>精铁阈值（≥此值时自动升级）:</label>
+                        <input type="number" id="smart-upgrade-threshold" value="50" min="5" max="9999" onchange="Game.onSmartUpgradeChange()">
+                    </div>
+                    <div class="smart-upgrade-row">
+                        <label>攻击力上限（升至≤此值停止）:</label>
+                        <input type="number" id="smart-upgrade-maxatk" value="9999" min="10" max="99999" onchange="Game.onSmartUpgradeChange()">
+                    </div>
+                    <div class="smart-upgrade-row">
+                        <label>每次升级保留精铁:</label>
+                        <input type="number" id="smart-upgrade-reserve" value="0" min="0" max="9999" onchange="Game.onSmartUpgradeChange()">
+                        <span style="color:#aaa; font-size:0.7rem;">（保留不花，用于其他用途）</span>
+                    </div>
+                </div>
+                <div class="smart-upgrade-panel" style="border-color: #e53e3e;">
+                    <h4>🍽️ 自动吞噬设置</h4>
+                    <div class="smart-upgrade-row">
+                        <input type="checkbox" id="auto-devour-enabled" onchange="Game.onAutoDevourChange()">
+                        <label for="auto-devour-enabled">启用自动吞噬（吞噬攻击力 &lt; 主剑 50% 的武器）</label>
+                    </div>
+                </div>
+                <div class="auto-status" id="auto-status-text">所有自动化功能已停止</div>
+            </div>
+
+            <!-- 怪物 -->
+            <div class="panel">
+                <h3>🏹 冒险打怪 <span id="monster-element" style="font-size:0.8rem; color:#ffd700;"></span></h3>
+                <div style="text-align:center;">
+                    <div style="font-size:3rem; position:relative;">
+                        <span id="monster-icon">👾</span>
+                    </div>
+                    <div id="monster-name">史莱姆 Lv.1</div>
+                    <div style="height:20px; background:#333; border-radius:10px; overflow:hidden; margin:10px 0;"><div id="monster-hp-bar" style="height:100%; background:linear-gradient(90deg,#e53e3e,#ff8c00); width:100%; transition:width 0.3s;"></div></div>
+                    <div>HP: <span id="monster-hp">50</span> / <span id="monster-max-hp">50</span></div>
+                    <div class="main-actions" style="margin-top:10px;">
+                        <button class="btn-action-main btn-inventory" onclick="Game.attackMonster()">攻击 (空格)</button>
+                        <button class="btn-action-main btn-talent" onclick="Game.nextMonster()" style="background:linear-gradient(145deg, #805ad5, #6b46c1);">下一关</button>
+                        <button class="btn-action-main" id="btn-auto-fight-small" onclick="Game.toggleAutoFight()" style="background:linear-gradient(145deg, #e53e3e, #9b2c2c);">⚡ 自动</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日志 -->
+            <div class="panel">
+                <h3>📜 战斗日志</h3>
+                <div class="log-filters">
+                    <span>筛选:</span>
+                    <button class="log-filter-btn active" onclick="setLogFilter('all', this)">全部</button>
+                    <button class="log-filter-btn" onclick="setLogFilter('crit', this)">暴击</button>
+                    <button class="log-filter-btn" onclick="setLogFilter('dodge', this)">闪避</button>
+                    <button class="log-filter-btn" onclick="setLogFilter('block', this)">格挡</button>
+                    <button class="log-filter-btn" onclick="setLogFilter('elem', this)">元素克制</button>
+                    <button class="log-filter-btn" onclick="setLogFilter('reward', this)">奖励</button>
+                    <button class="log-filter-btn" onclick="setLogFilter('auto', this)">自动化</button>
+                    <button class="log-filter-btn" onclick="setLogFilter('guild', this)">公会</button>
+                    <button class="log-filter-btn" onclick="setLogFilter('trade', this)">交易</button>
+                    <button class="log-filter-btn" onclick="setLogFilter('raid', this)">副本</button>
+                    <button class="log-export-csv" onclick="exportLogCSV()">📊 导出CSV</button>
+                </div>
+                <div class="log-box" id="log-box"></div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <!-- 装备栏 -->
+            <div class="panel">
+                <h3>🛡️ 装备栏</h3>
+                <div class="gear-slots">
+                    <div class="gear-slot empty" id="gear-ring" onclick="Game.openInventory('ring')"><div class="gear-icon">💍</div><div class="gear-name">戒指</div></div>
+                    <div class="gear-slot empty" id="gear-amulet" onclick="Game.openInventory('amulet')"><div class="gear-icon">📿</div><div class="gear-name">护符</div></div>
+                    <div class="gear-slot empty" id="gear-armor" onclick="Game.openInventory('armor')"><div class="gear-icon">🥋</div><div class="gear-name">盔甲</div></div>
+                </div>
+            </div>
+
+            <!-- 材料 -->
+            <div class="panel">
+                <h3>⛏️ 材料仓库</h3>
+                <div class="materials-grid" id="materials-grid"></div>
+            </div>
+
+            <!-- 地图 -->
+            <div class="panel">
+                <h3>🗺️ 世界地图</h3>
+                <div id="stamina-display">体力: <span id="stamina-value">30</span>/<span id="stamina-max">30</span></div>
+                <div class="stamina-bar-container"><div class="stamina-bar-fill" id="stamina-bar-fill"></div></div>
+                <div class="map-grid" id="map-grid">
+                    <div class="map-node" id="map-mine" onclick="Game.explore('mine')"><div class="map-icon">⛏️</div><div class="map-name">矿洞</div><div class="map-cost">消耗: 5体</div></div>
+                    <div class="map-node" id="map-forest" onclick="Game.explore('forest')"><div class="map-icon">🌲</div><div class="map-name">森林</div><div class="map-cost">消耗: 5体</div></div>
+                    <div class="map-node" id="map-volcano" onclick="Game.explore('volcano')"><div class="map-icon">🌋</div><div class="map-name">火山</div><div class="map-cost">消耗: 10体</div></div>
+                    <div class="map-node" id="map-star" onclick="Game.explore('star')"><div class="map-icon">🌌</div><div class="map-name">星空</div><div class="map-cost">消耗: 15体</div></div>
+                </div>
+                <div style="font-size:0.7rem; color:#aaa; margin-top:5px; text-align:center;" id="auto-explore-hint"></div>
+            </div>
+
+            <!-- 世界BOSS -->
+            <div class="panel boss-panel">
+                <h3>👹 世界BOSS</h3>
+                <div style="text-align:center; font-size:2.5rem;">🐉</div>
+                <div class="boss-timer" id="boss-timer">60</div>
+                <div class="boss-hp-bar"><div class="boss-hp-fill" id="boss-hp-bar"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:10px;"><span>远古巨龙</span><span id="boss-hp-text">1,000,000</span></div>
+                <button class="btn-action-main btn-forge" onclick="Game.attackBoss()">攻击BOSS (Ctrl+B)</button>
+                <button class="btn-action-main btn-inventory" onclick="Game.resetBoss()" style="background:linear-gradient(145deg, #c53030, #9b2c2c); margin-top:5px;">刷新BOSS</button>
+                <h4 style="margin-top:15px; font-size:0.9rem; color:#ccc;">伤害排行</h4>
+                <ul class="boss-rank-list" id="boss-rank-list"><li>暂无数据</li></ul>
+            </div>
+
+            <!-- 任务面板 -->
+            <div class="panel quest-panel">
+                <h3>📜 每日任务</h3>
+                <ul class="quest-list" id="quest-list"></ul>
+            </div>
+
+            <!-- 公会面板 -->
+            <div class="panel guild-panel">
+                <h3>⚔️ 公会 / 组队 / 交易</h3>
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchSocialTab('guild', this)">🏰 公会</button>
+                    <button class="tab-btn" onclick="switchSocialTab('raid', this)">⚔️ 副本</button>
+                    <button class="tab-btn" onclick="switchSocialTab('trade', this)">📬 消息</button>
+                    <button class="tab-btn" onclick="switchSocialTab('leaderboard', this)">🏆 排行榜</button>
+                </div>
+                <div id="guild-body"></div>
+                <div id="raid-body" style="display:none;"></div>
+                <div id="trade-body" style="display:none;"></div>
+                <div id="leaderboard-body" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 背包模态框 -->
+    <div class="modal-overlay" id="inventory-modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>🎒 背包</h2><span class="close-btn" onclick="UIManager.closeModal('inventory-modal')">&times;</span></div>
+            <div id="inventory-body"></div>
+        </div>
+    </div>
+
+    <!-- 锻造模态框 -->
+    <div class="modal-overlay" id="forge-modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>🔨 锻造炉</h2><span class="close-btn" onclick="UIManager.closeModal('forge-modal')">&times;</span></div>
+            <div class="forge-batch-panel">
+                <h4>⚡ 批量锻造</h4>
+                <div class="forge-batch-row">
+                    <label>选择装备:</label>
+                    <select id="batch-forge-select" style="padding:4px; border-radius:4px; background:#333; color:white; border:1px solid #666;"></select>
+                    <label>次数:</label>
+                    <input type="number" id="batch-forge-count" value="5" min="1" max="999">
+                    <button class="forge-batch-btn" style="background:#38a169;" onclick="batchForgeConfirm()">🔥 开始批量锻造</button>
+                </div>
+                <div style="font-size:0.7rem; color:#aaa; margin-top:5px;" id="batch-forge-info"></div>
+            </div>
+            <div id="forge-body"></div>
+        </div>
+    </div>
+
+    <!-- 天赋模态框 -->
+    <div class="modal-overlay" id="talent-modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>⚡ 技能天赋树</h2><span class="close-btn" onclick="UIManager.closeModal('talent-modal')">&times;</span></div>
+            <p>剩余技能点: <span id="modal-sp-count" style="color:gold; font-weight:bold;">0</span></p>
+            <div id="talent-tree-container"></div>
+        </div>
+    </div>
+
+    <!-- 存档管理模态框 -->
+    <div class="modal-overlay" id="save-modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>💾 存档管理</h2><span class="close-btn" onclick="UIManager.closeModal('save-modal')">&times;</span></div>
+            <h3 style="font-size:1rem; color:#4fd1c7; margin-bottom:10px;">存档槽位</h3>
+            <div class="save-slots-panel" id="save-slots-container"></div>
+            <h3 style="font-size:1rem; color:#ffd700; margin:15px 0 10px;">导入 / 导出</h3>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                <button class="btn-action-main btn-export" onclick="Game.exportSaveToFile()">📥 导出存档 (JSON)</button>
+                <button class="btn-action-main btn-import" onclick="document.getElementById('import-file').click()">📤 导入存档 (JSON)</button>
+                <input type="file" id="import-file" accept=".json" onchange="Game.importSaveFromFile(event.target.files[0])">
+            </div>
+            <div style="font-size:0.75rem; color:#aaa;">导出会下载一个 .json 文件到本地。导入会覆盖当前进度，请先备份！</div>
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content" style="max-width:450px;">
+            <div class="modal-header"><h2 id="confirm-title">确认操作</h2><span class="close-btn" onclick="UIManager.closeModal('confirm-modal')">&times;</span></div>
+            <div class="confirm-box">
+                <p id="confirm-message"></p>
+                <div class="confirm-actions">
+                    <button class="confirm-btn yes" id="confirm-yes">确认</button>
+                    <button class="confirm-btn no" onclick="UIManager.closeModal('confirm-modal')">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 单文件版：所有 JS / manifest / SW 全部内联 -->
+    <script>
+// ============================================================
+//  data.js — 游戏静态数据定义
+//  包含：材料、锻造配方、天赋、任务、成就、怪物、地图、公会科技
+// ============================================================
+const MATERIAL_DEFS = [
+    { id: 'iron',    name: '精铁', icon: '⚙️' },
+    { id: 'crystal', name: '魔晶', icon: '💎' },
+    { id: 'scale',   name: '龙鳞', icon: '🐉' },
+    { id: 'dust',    name: '星尘', icon: '✨' },
+    { id: 'feather', name: '凤羽', icon: '🔥' },
+    { id: 'soul',    name: '魂石', icon: '👻' },
+    { id: 'wood',    name: '古木', icon: '🪵' },
+    { id: 'thunder', name: '雷矿', icon: '⚡' },
+    { id: 'leather', name: '皮革', icon: '🧵' },
+    { id: 'stone',   name: '石块', icon: '🪨' },
+    { id: 'gold',    name: '金髓', icon: '🟡' },
+    { id: 'blood',   name: '龙血', icon: '🩸' },
+];
+const FORGE_RECIPES = [
+    // 普通武器
+    { id: 'starter',     name: "凡铁剑",   icon: "🗡️", type: 'weapon',  element: 'air',   req: {},                                stats: { attack: 10,  crit: 0  } },
+    { id: 'wind',        name: "风之牙",   icon: "🌀", type: 'weapon',  element: 'air',   req: { iron: 10, wood: 5 },              stats: { attack: 30,  crit: 10 } },
+    { id: 'fire',        name: "烈焰斩",   icon: "🔥", type: 'weapon',  element: 'fire',  req: { iron: 10, feather: 2 },           stats: { attack: 40,  crit: 5  } },
+    { id: 'ice',         name: "寒冰剑",   icon: "❄️", type: 'weapon',  element: 'water', req: { crystal: 15, dust: 5 },            stats: { attack: 35,  crit: 8  } },
+    { id: 'rock',        name: "大地之斧", icon: "🪓", type: 'weapon',  element: 'earth', req: { iron: 20, stone: 10 },             stats: { attack: 45,  crit: 0  } },
+    { id: 'gold',        name: "金刚杵",   icon: "☀️", type: 'weapon',  element: 'metal', req: { iron: 30, crystal: 20, gold: 5 }, stats: { attack: 50,  crit: 5  } },
+    { id: 'holy',        name: "圣光裁决", icon: "✨", type: 'weapon',  element: 'light', req: { crystal: 50, dust: 20, soul: 10, gold: 5 }, stats: { attack: 100, crit: 20 } },
+    // 隐藏武器
+    { id: 'bad_luck',    name: "霉运剑",   icon: "🤡", type: 'weapon',  element: 'none',  req: {},                                stats: { attack: 1,   crit: 1  }, secret: true,  condition: s => s.stats.forgeFailures >= 10 },
+    { id: 'death',       name: "死神镰刀", icon: "💀", type: 'weapon',  element: 'dark',  req: { soul: 999 },                      stats: { attack: 500, crit: 50 }, secret: true,  condition: s => s.materials.soul.count >= 999 },
+    // 防具
+    { id: 'ring_dodge',  name: "敏捷指环", icon: "💍", type: 'ring',   element: 'none',  req: { leather: 10, crystal: 2 },          stats: { dodge: 5 } },
+    { id: 'ring_block',  name: "磐石指环", icon: "💍", type: 'ring',   element: 'none',  req: { iron: 15, stone: 5 },               stats: { block: 5 } },
+    { id: 'amulet_crit', name: "暴击护符", icon: "📿", type: 'amulet', element: 'none',  req: { crystal: 5, iron: 5 },              stats: { crit: 5 } },
+    { id: 'armor_light', name: "轻甲",     icon: "🥋", type: 'armor',  element: 'none',  req: { leather: 20, wood: 10 },             stats: { dodge: 3, block: 2 } },
+    { id: 'armor_heavy', name: "重甲",     icon: "🛡️", type: 'armor',  element: 'none',  req: { iron: 30, leather: 5 },              stats: { block: 10, dodge: -2 } },
+];
+const TALENT_DEFS = {
+    forge:    { name: "锻造学", desc: "降低升级和锻造消耗",         maxLv: 10, effect: lvl => `当前: -${lvl*5}%` },
+    sword:    { name: "剑术",   desc: "增加暴击率与暴击伤害",     maxLv: 10, effect: lvl => `当前: +${lvl*2}% 暴击, +${lvl*10}% 爆伤` },
+    gather:   { name: "采集术", desc: "增加材料获取数量",         maxLv: 10, effect: lvl => `当前: +${lvl*20}%` },
+    survival: { name: "生存术", desc: "增加闪避与格挡率",         maxLv: 10, effect: lvl => `当前: +${lvl*3}% 闪避/格挡` },
+};
+const QUEST_DEFS = [
+    { id: 'kill',   name: "屠戮者",   desc: "击败怪物",     target: 10, reward: { sp: 1, iron: 20 },    type: 'kills' },
+    { id: 'crit',   name: "致命一击", desc: "触发暴击",     target: 5,  reward: { sp: 1, crystal: 10 }, type: 'crits' },
+    { id: 'gather', name: "勤劳的矿工", desc: "采集材料",   target: 20, reward: { sp: 1, wood: 30 },    type: 'gathered' },
+    { id: 'forge',  name: "神匠",     desc: "进行锻造",     target: 3,  reward: { sp: 2, blood: 1 },   type: 'forged' },
+];
+const ACHIEVEMENT_DEFS = [
+    { id: 'first_upgrade',  name: "初出茅庐",   desc: "首次升级神剑",                   condition: s => s.equipped.weapon?.stats.attack > 10,                      reward: { sp: 2 } },
+    { id: 'crit_master',    name: "暴击大师",   desc: "累计暴击100次",                  condition: s => s.stats.crits >= 100,                                  reward: { sp: 5, feather: 5 } },
+    { id: 'monster_slayer', name: "怪物猎人",   desc: "累计击败1000只怪物",             condition: s => s.stats.kills >= 1000,                                 reward: { sp: 10, blood: 10 } },
+    { id: 'dragon_slayer',  name: "屠龙勇士",   desc: "击败远古巨龙",                   condition: s => s.boss.damageList.some(d => d.name === s.equipped.weapon?.name && s.boss.hp <= 0), reward: { sp: 20, gold: 10 } },
+    { id: 'auto_master',    name: "自动化大师", desc: "累计自动战斗1000次",              condition: s => s.stats.autoFightCount >= 1000,                         reward: { sp: 5, crystal: 20 } },
+    { id: 'blacksmith',     name: "百炼成钢",   desc: "累计锻造100次",                  condition: s => s.stats.forged >= 100,                                  reward: { sp: 10, gold: 5 } },
+    // 公会相关成就
+    { id: 'guild_member',   name: "公会新兵",   desc: "加入或创建公会",                 condition: s => !!s.guild?.id,                                          reward: { sp: 2, iron: 10 } },
+    { id: 'guild_donor',    name: "慷慨解囊",   desc: "累计捐赠100个材料",              condition: s => (s.stats.donated || 0) >= 100,                          reward: { sp: 5, crystal: 10 } },
+    { id: 'guild_tech',     name: "科技先驱",   desc: "公会科技达到5级",                 condition: s => { const g = s.guild; if(!g) return false; return Object.values(g.tech||{}).some(v=>v>=5); }, reward: { sp: 10 } },
+    { id: 'team_player',    name: "团队协作",   desc: "完成10次组队副本",                condition: s => (s.stats.teamRaids || 0) >= 10,                         reward: { sp: 5, blood: 5 } },
+    { id: 'trader',         name: "交易达人",   desc: "完成20次交易/赠送",               condition: s => (s.stats.trades || 0) >= 20,                            reward: { sp: 5, gold: 5 } },
+];
+const MONSTER_DEFS = [
+    { name: "史莱姆",   icon: "👾", element: "water" },
+    { name: "哥布林",   icon: "👺", element: "earth" },
+    { name: "骷髅兵",   icon: "💀", element: "metal" },
+    { name: "火焰狼",   icon: "🐺", element: "fire"  },
+    { name: "双头龙",   icon: "🐉", element: "fire"  },
+    { name: "岩石巨人", icon: "🗿", element: "earth" },
+    { name: "暗影刺客", icon: "🥷", element: "dark"  },
+    { name: "雷霆元素", icon: "⚡", element: "air"   },
+    { name: "冰霜巨人", icon: "🧊", element: "water" },
+    { name: "凤凰",     icon: "🔥", element: "fire"  },
+];
+const MAP_DEFS = {
+    mine:    { id: 'mine',    name: '矿洞', icon: '⛏️', cost: 5,  drops: ['iron', 'crystal', 'thunder', 'stone'] },
+    forest:  { id: 'forest',  name: '森林', icon: '🌲', cost: 5,  drops: ['wood', 'leather'] },
+    volcano: { id: 'volcano', name: '火山', icon: '🌋', cost: 10, drops: ['feather', 'iron', 'scale'] },
+    star:    { id: 'star',    name: '星空', icon: '🌌', cost: 15, drops: ['dust', 'soul', 'crystal', 'gold'] },
+};
+
+// 公会科技定义
+const GUILD_TECH_DEFS = {
+    forge_mastery:  { name: "锻造精通", desc: "公会成员锻造消耗降低",     maxLv: 10, effect: lvl => `当前: -${lvl*3}% 锻造消耗`, cost: lvl => 100 + lvl * 50 },
+    combat_tactics: { name: "战斗策略", desc: "公会成员攻击力加成",     maxLv: 10, effect: lvl => `当前: +${lvl*2}% 攻击力`,   cost: lvl => 100 + lvl * 50 },
+    elemental:      { name: "元素共鸣", desc: "公会成员元素伤害加成",   maxLv: 5,  effect: lvl => `当前: +${lvl*5}% 元素克制伤害`, cost: lvl => 200 + lvl * 100 },
+    resilience:     { name: "坚韧意志", desc: "公会成员闪避/格挡加成", maxLv: 10, effect: lvl => `当前: +${lvl*1}% 闪避/格挡`, cost: lvl => 100 + lvl * 50 },
+    loot_luck:      { name: "幸运拾取", desc: "公会成员材料掉落加成", maxLv: 5,  effect: lvl => `当前: +${lvl*10}% 掉落率`, cost: lvl => 150 + lvl * 75 },
+};
+
+// 组队副本定义
+const RAID_DEFS = [
+    { id: 'cave_of_trials', name: "试炼洞窟",   icon: "🏔️", requiredMembers: 2, bossHp: 5000,  reward: { sp: 3, crystal: 20, iron: 30 }, element: "earth" },
+    { id: 'dragon_lair',    name: "巨龙巢穴",   icon: "🐲", requiredMembers: 3, bossHp: 15000, reward: { sp: 5, blood: 5, soul: 10 },  element: "fire"  },
+    { id: 'abyssal_depths', name: "深渊之底",   icon: "🌊", requiredMembers: 3, bossHp: 30000, reward: { sp: 8, gold: 5, dust: 20 },   element: "water" },
+    { id: 'celestial_gate', name: "天界之门",   icon: "🌟", requiredMembers: 4, bossHp: 60000, reward: { sp: 10, gold: 10, soul: 20 }, element: "light" },
+];
+
+
+// ====== module boundary ======
+// ============================================================
+//  mechanics.js — 游戏机制 / 数值计算
+//  包含：属性汇总、伤害公式、元素克制、掉落、自动地图选择
+// ============================================================
+const Mechanics = {
+    // ---------- 属性汇总 ----------
+    getTotalStats(state) {
+        const totals = { attack: 0, crit: 0, dodge: 0, block: 0, def: 0 };
+        Object.values(state.equipped).forEach(item => {
+            if (item && item.stats) {
+                for (const stat in item.stats) {
+                    totals[stat] = (totals[stat] || 0) + item.stats[stat];
+                }
+            }
+        });
+        // 天赋加成
+        totals.crit  += state.talents.sword    * 2;
+        totals.dodge += state.talents.survival * 3;
+        totals.block += state.talents.survival * 3;
+        // 公会科技加成
+        if (state.guild?.tech?.combat_tactics) {
+            const lvl = state.guild.tech.combat_tactics;
+            totals.attack = Math.floor(totals.attack * (1 + lvl * 0.02));
+        }
+        if (state.guild?.tech?.resilience) {
+            const lvl = state.guild.tech.resilience;
+            totals.dodge += lvl * 1;
+            totals.block += lvl * 1;
+        }
+        return totals;
+    },
+
+    // ---------- 怪物反击 ----------
+    calculateDamage(state, stats) {
+        if (Math.random() * 100 < stats.dodge) { return { type: 'dodge', damage: 0 }; }
+        let damage = 10 + state.monster.level * 2;
+        if (Math.random() * 100 < stats.block) { damage *= 0.5; return { type: 'block', damage }; }
+        return { type: 'hit', damage };
+    },
+
+    // ---------- 元素克制表 ----------
+    getElementMultiplier(atkElem, defElem) {
+        const chart = {
+            fire:  { water: 0.5, earth: 1.5, metal: 1.2, wood: 0.8 },
+            water: { fire: 1.5, earth: 0.8, metal: 0.5, wood: 1.2 },
+            earth: { fire: 0.8, water: 1.5, metal: 1.2, wood: 0.5 },
+            metal: { fire: 0.8, water: 1.2, earth: 0.5, wood: 1.5 },
+            wood:  { fire: 1.2, water: 0.8, earth: 1.5, metal: 0.5 },
+            air:   { earth: 1.5, water: 0.8 },
+            light: { dark: 2.0 },
+            dark:  { light: 2.0 },
+        };
+        if (!atkElem || atkElem === 'none' || !defElem) return 1;
+        return chart[atkElem]?.[defElem] || 1;
+    },
+
+    getElementIcon(elem) {
+        const icons = { fire: '🔥', water: '💧', earth: '🌿', metal: '⚔️', wood: '🪵', air: '💨', light: '☀️', dark: '🌑' };
+        return icons[elem] || '';
+    },
+
+    // ---------- 掉落 ----------
+    dropLoot(state, logFn) {
+        const mats = Object.keys(state.materials);
+        const dropMat = mats[Math.floor(Math.random() * mats.length)];
+        let amount = Math.floor(Math.random() * 3) + 1;
+        // 公会幸运拾取加成
+        if (state.guild?.tech?.loot_luck) {
+            const lvl = state.guild.tech.loot_luck;
+            amount = Math.ceil(amount * (1 + lvl * 0.1));
+        }
+        state.materials[dropMat].count += amount;
+        logFn(`获得战利品: ${state.materials[dropMat].icon} ${state.materials[dropMat].name} x${amount}`);
+    },
+
+    // ---------- 公会科技效果 ----------
+    getGuildTechMultiplier(state, type) {
+        if (!state.guild?.tech) return 1;
+        switch (type) {
+            case 'forge_cost': {
+                const lvl = state.guild.tech.forge_mastery || 0;
+                return Math.max(0.5, 1 - lvl * 0.03);
+            }
+            case 'elemental': {
+                const lvl = state.guild.tech.elemental || 0;
+                return 1 + lvl * 0.05;
+            }
+            default: return 1;
+        }
+    },
+};
+
+// ============================================================
+//  AutoSystem — 自动化辅助算法
+// ============================================================
+const AutoSystem = {
+    // 分析材料缺口，返回最佳地图
+    pickBestMap(state) {
+        const costs = { mine: 5, forest: 5, volcano: 10, star: 15 };
+        const needed = {};
+        state.forgeRecipes.forEach(recipe => {
+            if (recipe.secret && !state.secretSwordsUnlocked.includes(recipe.id)) return;
+            for (const matId in recipe.req) {
+                const have = state.materials[matId]?.count || 0;
+                const need = recipe.req[matId];
+                needed[matId] = (needed[matId] || 0) + Math.max(0, need - have);
+            }
+        });
+
+        if (Object.keys(needed).length === 0) {
+            return state.stamina >= 5 ? 'mine' : null;
+        }
+
+        const mapDrops = {
+            mine:    MAP_DEFS.mine.drops,
+            forest:  MAP_DEFS.forest.drops,
+            volcano: MAP_DEFS.volcano.drops,
+            star:    MAP_DEFS.star.drops,
+        };
+
+        let bestMap = null, bestScore = -1;
+        for (const mapId in mapDrops) {
+            const cost = costs[mapId];
+            if (state.stamina < cost) continue;
+            const drops = mapDrops[mapId];
+            let score = 0;
+            drops.forEach(mat => { score += needed[mat] || 0; });
+            score = score / cost;
+            if (score > bestScore) { bestScore = score; bestMap = mapId; }
+        }
+        return bestMap || (state.stamina >= 5 ? 'mine' : null);
+    },
+};
+
+
+// ====== module boundary ======
+// ============================================================
+//  effects.js — 视觉特效层
+// ============================================================
+const Effects = {
+    showDamage(amount, isCrit, targetIcon) {
+        const layer = document.getElementById('effect-layer');
+        const monsterEl = document.getElementById('monster-icon');
+        if (!layer || !monsterEl) return;
+        const rect = monsterEl.getBoundingClientRect();
+        const popup = document.createElement('div');
+        popup.className = `damage-popup ${isCrit ? 'crit' : ''}`;
+        popup.textContent = `-${amount.toFixed(0)}`;
+        popup.style.left = `${rect.left + rect.width / 2}px`;
+        popup.style.top  = `${rect.top}px`;
+        layer.appendChild(popup);
+        if (isCrit) {
+            const critText = document.createElement('div');
+            critText.className = 'crit-text';
+            critText.textContent = 'CRIT!';
+            critText.style.left = `${rect.left + rect.width / 2}px`;
+            critText.style.top  = `${rect.top - 50}px`;
+            layer.appendChild(critText);
+            setTimeout(() => critText.remove(), 1000);
+        }
+        setTimeout(() => popup.remove(), 1000);
+    },
+
+    shakeScreen() {
+        document.body.style.animation = 'shake 0.2s';
+        setTimeout(() => { document.body.style.animation = ''; }, 200);
+    },
+
+    showCrit() { /* hook for future crit effects */ },
+
+    forgeFlash() {
+        document.body.style.animation = 'forgeFlash 0.5s';
+        setTimeout(() => { document.body.style.animation = ''; }, 500);
+    },
+};
+
+
+// ====== module boundary ======
+// ============================================================
+//  log.js — 结构化战斗日志系统
+//  支持按类型筛选 + CSV 导出
+// ============================================================
+
+const MAX_ENTRIES = 200;
+const LogSystem = {
+    entries: [],
+    filter: 'all',
+
+    add(msg, className) {
+        className = className || 'log-normal';
+        const entry = { time: new Date(), msg, className, raw: msg.replace(/<[^>]*>/g, '') };
+        this.entries.push(entry);
+        while (this.entries.length > MAX_ENTRIES) this.entries.shift();
+        this.render();
+    },
+
+    setFilter(filter) {
+        this.filter = filter;
+        if (window.Game?.state) window.Game.state.autoSettings.logFilter = filter;
+        this.render();
+    },
+
+    getFiltered() {
+        if (this.filter === 'all') return this.entries;
+        const map = {
+            'crit':   ['log-crit'],
+            'dodge':  ['log-dodge'],
+            'block':  ['log-block'],
+            'elem':   ['log-elem'],
+            'reward': ['log-reward', 'log-secret'],
+            'auto':   ['log-auto'],
+            'guild':  ['log-guild'],
+            'trade':  ['log-trade'],
+            'raid':   ['log-raid'],
+        };
+        const allowed = map[this.filter] || [];
+        return this.entries.filter(e => allowed.includes(e.className));
+    },
+
+    render() {
+        const box = document.getElementById('log-box');
+        if (!box) return;
+        const filtered = this.getFiltered();
+        box.innerHTML = filtered.map(e => {
+            const time = e.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return `<div class="log-entry ${e.className}"><span class="log-time">[${time}]</span> ${e.msg}</div>`;
+        }).join('');
+        box.scrollTop = box.scrollHeight;
+    },
+
+    exportCSV() {
+        const filtered = this.getFiltered();
+        if (filtered.length === 0) { addLog("没有日志可导出！", 'log-normal'); return; }
+        let csv = '\uFEFF时间,类型,内容\n'; // BOM for Excel
+        filtered.forEach(e => {
+            const time = e.time.toISOString();
+            const type = e.className.replace('log-', '');
+            const content = e.raw.replace(/,/g, '，').replace(/\n/g, ' ');
+            csv += `"${time}","${type}","${content}"\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        a.download = `战斗日志_${ts}.csv`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        addLog("日志已导出为 CSV 文件！", 'log-reward');
+    },
+
+    clear() { this.entries = []; this.render(); },
+};
+
+// 全局快捷函数
+function addLog(msg, className) {
+    className = className || 'log-normal';
+    LogSystem.add(msg, className);
+}
+
+
+// ====== module boundary ======
+// ============================================================
+//  ui.js — UI 管理器：模态框、确认弹窗、离线报告
+// ============================================================
+const UIManager = {
+    // ---------- 模态框通用 ----------
+    openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+    },
+    closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    },
+
+    // ---------- 背包 ----------
+    openInventoryModal(state, filterType = null) {
+        const body = document.getElementById('inventory-body');
+        if (!body) return;
+        let html = '<div class="inventory-grid">';
+        const filtered = state.inventory.filter(item => !filterType || item.type === filterType);
+        if (filtered.length === 0) html += '<p>空空如也...</p>';
+        filtered.forEach(item => {
+            const isEquipped = state.equipped[item.type]?.id === item.id;
+            const elemIcon = item.element ? this._elementIcon(item.element) : '';
+            const isHidden = item.secret;
+            const canDevour = item.type === 'weapon' && !isEquipped && !isHidden;
+            html += `<div class="inv-slot ${isEquipped?'equipped':''} ${isHidden?'hidden-sword':''}">
+                <div class="inv-icon">${item.icon}</div>
+                <div class="inv-name">${item.name}</div>
+                <div class="inv-stats">攻:${item.stats.attack||0} 暴:${item.stats.crit||0}%</div>
+                <div class="inv-stats">闪:${item.stats.dodge||0}% 格:${item.stats.block||0}%</div>
+                ${elemIcon?`<div class="inv-element">属性: ${elemIcon}</div>`:''}
+                <div style="font-size:0.7rem; color:${isEquipped?'cyan':'transparent'}">${isEquipped?'已装备':''}</div>
+                <div class="inv-actions">
+                    ${!isEquipped?`<button class="inv-btn equip" onclick="Game.equipItem(${item.id})">装备</button>`:''}
+                    ${canDevour?`<button class="inv-btn devour" onclick="Game.devourSword(${item.id})">吞噬</button>`:''}
+                </div></div>`;
+        });
+        html += '</div>';
+        body.innerHTML = html;
+        this.openModal('inventory-modal');
+    },
+
+    // ---------- 锻造炉 ----------
+    openForgeModal(state) {
+        const body = document.getElementById('forge-body');
+        if (!body) return;
+        // 批量锻造下拉
+        const select = document.getElementById('batch-forge-select');
+        if (select) {
+            select.innerHTML = '';
+            state.forgeRecipes.forEach(r => {
+                if (r.type !== 'weapon') return;
+                if (r.secret && !state.secretSwordsUnlocked.includes(r.id)) return;
+                const opt = document.createElement('option');
+                opt.value = r.id; opt.textContent = `${r.icon} ${r.name} (攻${r.stats.attack})`;
+                select.appendChild(opt);
+            });
+        }
+        this._updateBatchForgeInfo(state);
+
+        let html = '<div class="inventory-grid">';
+        state.forgeRecipes.forEach(r => {
+            if (r.type !== 'weapon') return;
+            if (r.secret && !state.secretSwordsUnlocked.includes(r.id)) return;
+            const canForge = Object.keys(r.req).every(m => state.materials[m]?.count >= r.req[m]);
+            const elemIcon = r.element ? this._elementIcon(r.element) : '';
+            html += `<div class="inv-slot ${r.secret?'hidden-sword':''}" style="${!canForge?'opacity:0.5;':''}" onclick="${canForge?`Game.forgeItem('${r.id}')`:''}">
+                <div class="inv-icon">${r.icon}</div><div class="inv-name">${r.name}</div>
+                <div class="inv-stats">攻:${r.stats.attack||0} 暴:${r.stats.crit||0}%</div>
+                ${elemIcon?`<div class="inv-element">属性: ${elemIcon}</div>`:''}
+                <div style="font-size:0.7rem; color:#aaa; margin-top:3px;">需求材料</div>
+                <div style="font-size:0.65rem; color:#ccc; text-align:left; margin-top:3px;">${Object.keys(r.req).map(m=>`${state.materials[m]?.icon||''}${r.req[m]}`).join(' ')}</div></div>`;
+        });
+        html += '</div>';
+        body.innerHTML = html;
+        this.openModal('forge-modal');
+    },
+
+    _updateBatchForgeInfo(state) {
+        const select = document.getElementById('batch-forge-select');
+        const info = document.getElementById('batch-forge-info');
+        if (!select || !info) return;
+        const recipe = state.forgeRecipes.find(r => r.id === select.value);
+        if (!recipe) { info.textContent = ''; return; }
+        const count = parseInt(document.getElementById('batch-forge-count')?.value) || 1;
+        let matText = '';
+        for (const m in recipe.req) {
+            const need = recipe.req[m] * count;
+            const have = state.materials[m]?.count || 0;
+            matText += `${state.materials[m]?.icon} ${m}: ${have}/${need}${have>=need?' ✅':' ❌'} `;
+        }
+        const maxPossible = Object.keys(recipe.req).length > 0
+            ? Math.min(...Object.keys(recipe.req).map(m => Math.floor((state.materials[m]?.count||0)/recipe.req[m])))
+            : '∞';
+        info.innerHTML = `${matText}<br>最多可锻造: <strong style="color:gold;">${maxPossible}</strong> 次${recipe.secret?' (有失败率)':''}`;
+    },
+
+    // ---------- 天赋树 ----------
+    openTalentModal(state) {
+        const container = document.getElementById('talent-tree-container');
+        if (!container) return;
+        container.innerHTML = '';
+        for (const key in state.talentDefs) {
+            const def = state.talentDefs[key];
+            const cur = state.talents[key];
+            const max = def.maxLv;
+            const isMax = cur >= max;
+            container.innerHTML += `<div style="background:rgba(255,255,255,0.05); border:1px solid #444; border-radius:8px; padding:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                <div><h4 style="color:#ffd700;">${def.name} Lv.${cur}/${max}</h4>
+                <p style="font-size:0.8rem; color:#ccc;">${def.desc}</p>
+                <p style="color:#ffd700; font-size:0.7rem;">${def.effect(cur)}</p></div>
+                <button style="padding:8px 16px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; color:white; background:${state.sp>0&&!isMax?'#3182ce':'#666'};" onclick="Game.learnTalent('${key}')" ${state.sp<=0||isMax?'disabled':''}>${isMax?'MAX':'升级'}</button></div>`;
+        }
+        const spEl = document.getElementById('modal-sp-count');
+        if (spEl) spEl.textContent = state.sp;
+        this.openModal('talent-modal');
+    },
+
+    // ---------- 存档槽位 ----------
+    openSaveSlotsPanel() {
+        const container = document.getElementById('save-slots-container');
+        if (!container) return;
+        const slots = [
+            { id: 'slot1', name: '存档 1' },
+            { id: 'slot2', name: '存档 2' },
+            { id: 'slot3', name: '存档 3' },
+            { id: 'auto',  name: '自动存档' },
+        ];
+        container.innerHTML = '';
+        slots.forEach(slot => {
+            const timeKey = `DivineSwordSlot_${slot.id}_time`;
+            const saveTime = localStorage.getItem(timeKey) || '无存档';
+            const hasData = !!localStorage.getItem(`DivineSwordSlot_${slot.id}`);
+            container.innerHTML += `<div class="save-slot ${hasData?'':'empty'}" style="${hasData?'':'opacity:0.5;'}">
+                <div class="save-slot-name">${slot.name}</div>
+                <div class="save-slot-info">${saveTime}</div>
+                <div style="margin-top:5px; display:flex; gap:5px; justify-content:center;">
+                    <button style="padding:3px 8px; font-size:0.7rem; border:none; border-radius:3px; cursor:pointer; background:#38a169; color:white;" onclick="Game.saveToSlot('${slot.id}'); UIManager.refreshSaveSlots(); addLog('已保存到${slot.name}！','log-reward');">保存</button>
+                    <button style="padding:3px 8px; font-size:0.7rem; border:none; border-radius:3px; cursor:pointer; background:${hasData?'#3182ce':'#666'}; color:white;" onclick="${hasData?`Game.loadFromSlot('${slot.id}'); UIManager.closeModal('save-modal');`:'void(0)'}" ${hasData?'':'disabled'}>读取</button>
+                </div></div>`;
+        });
+    },
+
+    refreshSaveSlots() { this.openSaveSlotsPanel(); },
+
+    // ---------- 离线报告 ----------
+    showOfflineReport(state, seconds, kills, materials) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay'; modal.style.display = 'flex';
+        let matsHtml = '';
+        for (const matId in materials) { matsHtml += `<p>${state.materials[matId]?.icon} ${state.materials[matId]?.name} x${materials[matId]}</p>`; }
+        modal.innerHTML = `<div class="modal-content"><div class="modal-header"><h2>⏱️ 离线收益报告</h2><span class="close-btn" onclick="this.closest('.modal-overlay').remove()">&times;</span></div>
+            <div id="offline-report">
+                <p>离线时间: ${Math.floor(seconds/3600)}小时 ${(seconds%3600/60).toFixed(0)}分钟</p>
+                <p>剑灵替你击败了 <span style="color:gold;">${kills}</span> 只怪物</p>
+                <h3>获得材料:</h3>${matsHtml || '<p>一无所获...</p>'}</div></div>`;
+        document.body.appendChild(modal);
+    },
+
+    // ---------- 确认弹窗 ----------
+    showConfirm(message, onYes) {
+        document.getElementById('confirm-message').innerHTML = message;
+        const yesBtn = document.getElementById('confirm-yes');
+        yesBtn.onclick = () => { onYes(); this.closeModal('confirm-modal'); };
+        this.openModal('confirm-modal');
+    },
+
+    // ---------- 元素图标辅助 ----------
+    _elementIcon(elem) {
+        const icons = { fire:'🔥', water:'💧', earth:'🌿', metal:'⚔️', wood:'🪵', air:'💨', light:'☀️', dark:'🌑' };
+        return icons[elem] || '';
+    },
+};
+
+
+// ====== module boundary ======
+// ============================================================
+//  renderer.js — 所有 DOM 渲染逻辑
+// ============================================================
+const Renderer = {
+    // ---------- 总入口 ----------
+    init(state) { this.renderAll(state); },
+    renderAll(state) {
+        this.renderStats(state);
+        this.renderMaterials(state);
+        this.renderGear(state);
+        this.updateMonster(state);
+        this.updateBoss(state);
+        this.updateQuests(state);
+        this.updateParticles(state);
+        this.updateStamina(state);
+        this.updateMapRecommendation(state);
+        this.updateAutoButtons(state);
+        this.updateAutoStatus(state);
+    },
+
+    // ---------- 神剑属性 ----------
+    renderStats(state) {
+        const stats = Mechanics.getTotalStats(state);
+        document.getElementById('sword-icon').textContent = state.equipped.weapon?.icon || '❓';
+        document.getElementById('sword-name').textContent = state.equipped.weapon?.name || '无武器';
+        document.getElementById('stat-attack').textContent = stats.attack.toFixed(1);
+        document.getElementById('stat-crit').textContent  = stats.crit.toFixed(1) + '%';
+        document.getElementById('stat-dodge').textContent = stats.dodge.toFixed(1) + '%';
+        document.getElementById('stat-sp').textContent    = state.sp;
+    },
+
+    // ---------- 材料仓库 ----------
+    renderMaterials(state) {
+        const grid = document.getElementById('materials-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        for (const key in state.materials) {
+            const mat = state.materials[key];
+            grid.innerHTML += `<div class="mat-item" onclick="Game.state.materials['${key}'].count+=${1+state.talents.gather}; Renderer.renderMaterials(Game.state); addLog('采集了${mat.name}');"><div class="mat-icon">${mat.icon}</div><div class="mat-name">${mat.name}</div><div class="mat-count">x${mat.count}</div></div>`;
+        }
+    },
+
+    // ---------- 装备栏 ----------
+    renderGear(state) {
+        const slots = ['ring', 'amulet', 'armor'];
+        slots.forEach(slot => {
+            const el = document.getElementById(`gear-${slot}`);
+            if (!el) return;
+            const item = state.equipped[slot];
+            if (item) {
+                el.classList.remove('empty'); el.classList.add('equipped');
+                el.innerHTML = `<div class="gear-icon">${item.icon}</div><div class="gear-name">${item.name}</div>`;
+            } else {
+                el.classList.add('empty'); el.classList.remove('equipped');
+                const icons = { ring: '💍', amulet: '📿', armor: '🥋' };
+                const names = { ring: '戒指', amulet: '护符', armor: '盔甲' };
+                el.innerHTML = `<div class="gear-icon">${icons[slot]}</div><div class="gear-name">${names[slot]}</div>`;
+            }
+        });
+    },
+
+    // ---------- 怪物 ----------
+    updateMonster(state) {
+        const m = state.monster;
+        document.getElementById('monster-icon').textContent = m.icon;
+        document.getElementById('monster-name').textContent = `${m.name} Lv.${m.level}`;
+        document.getElementById('monster-element').textContent = `(属性:${Mechanics.getElementIcon(m.element)})`;
+        document.getElementById('monster-hp').textContent = m.hp.toFixed(0);
+        document.getElementById('monster-max-hp').textContent = m.maxHp.toFixed(0);
+        document.getElementById('monster-hp-bar').style.width = `${(m.hp / m.maxHp) * 100}%`;
+    },
+
+    // ---------- 体力 ----------
+    updateStamina(state) {
+        const el = document.getElementById('stamina-value');
+        const maxEl = document.getElementById('stamina-max');
+        const bar = document.getElementById('stamina-bar-fill');
+        if (el) el.textContent = state.stamina;
+        if (maxEl) maxEl.textContent = state.maxStamina;
+        if (bar) bar.style.width = (state.stamina / state.maxStamina) * 100 + '%';
+    },
+
+    // ---------- BOSS ----------
+    updateBoss(state) {
+        const b = state.boss;
+        document.getElementById('boss-timer').textContent = b.timer;
+        document.getElementById('boss-hp-bar').style.width = `${(b.hp / b.maxHp) * 100}%`;
+        document.getElementById('boss-hp-text').textContent = b.hp.toLocaleString();
+        const rankList = document.getElementById('boss-rank-list');
+        rankList.innerHTML = '';
+        if (b.damageList.length === 0) rankList.innerHTML = '<li>暂无数据</li>';
+        else b.damageList.slice(0, 5).forEach((entry, i) =>
+            rankList.innerHTML += `<li><span>${i+1}. ${entry.name}</span><span>${entry.damage.toFixed(0)}</span></li>`
+        );
+    },
+
+    // ---------- 任务 ----------
+    updateQuests(state) {
+        const list = document.getElementById('quest-list');
+        if (!list) return;
+        list.innerHTML = '';
+        state.quests.forEach(quest => {
+            const li = document.createElement('li');
+            li.className = `quest-item ${quest.completed ? 'completed' : ''}`;
+            const rewardStr = Object.keys(quest.reward)
+                .filter(k => k !== 'sp')
+                .map(k => `${state.materials[k]?.icon || ''}${quest.reward[k]}`)
+                .join(' ');
+            li.innerHTML = `<div>${quest.name}: ${quest.desc} ${quest.completed ? '✅' : ''}</div>
+                <div class="quest-progress"><div class="quest-progress-bar" style="width:${(quest.progress/quest.target)*100}%"></div></div>
+                <div class="quest-reward">奖励: SP+${quest.reward.sp} ${rewardStr}</div>`;
+            list.appendChild(li);
+        });
+    },
+
+    // ---------- 粒子特效 ----------
+    updateParticles(state) {
+        const container = document.getElementById('particle-effect');
+        if (!container) return;
+        container.innerHTML = '';
+        const wid = state.equipped.weapon?.id;
+        if (['holy','gold','death'].includes(wid)) {
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = `${Math.random()*100}%`;
+                p.style.top  = `${Math.random()*100}%`;
+                p.style.animationDelay = `${Math.random()*2}s`;
+                container.appendChild(p);
+            }
+        }
+    },
+
+    // ---------- 地图推荐 ----------
+    updateMapRecommendation(state) {
+        ['mine','forest','volcano','star'].forEach(id => {
+            const el = document.getElementById(`map-${id}`);
+            if (el) el.classList.remove('recommended');
+        });
+        if (state.autoSettings.explore) {
+            const best = AutoSystem.pickBestMap(state);
+            if (best) {
+                const el = document.getElementById(`map-${best}`);
+                if (el) el.classList.add('recommended');
+            }
+        }
+    },
+
+    // ---------- 自动按钮状态 ----------
+    updateAutoButtons(state) {
+        const fightBtn     = document.getElementById('btn-auto-fight');
+        const fightBtnSm   = document.getElementById('btn-auto-fight-small');
+        const exploreBtn   = document.getElementById('btn-auto-explore');
+        const indicator    = document.getElementById('auto-indicator');
+        if (!fightBtn) return;
+
+        if (state.autoSettings.fight) {
+            fightBtn.className = 'auto-btn on';
+            fightBtn.textContent = '⚡ 自动战斗: 开';
+            if (fightBtnSm) { fightBtnSm.textContent = '⚡ 自动(开)'; fightBtnSm.style.background = 'linear-gradient(145deg, #38a169, #276749)'; }
+            indicator?.classList.add('active');
+        } else {
+            fightBtn.className = 'auto-btn off';
+            fightBtn.textContent = '⚡ 自动战斗: 关';
+            if (fightBtnSm) { fightBtnSm.textContent = '⚡ 自动'; fightBtnSm.style.background = 'linear-gradient(145deg, #e53e3e, #9b2c2c)'; }
+            if (!state.autoSettings.explore) indicator?.classList.remove('active');
+        }
+        if (state.autoSettings.explore) {
+            exploreBtn.className = 'auto-btn on'; exploreBtn.textContent = '🗺️ 自动探索: 开';
+            indicator?.classList.add('active');
+        } else {
+            exploreBtn.className = 'auto-btn off'; exploreBtn.textContent = '🗺️ 自动探索: 关';
+            if (!state.autoSettings.fight) indicator?.classList.remove('active');
+        }
+    },
+
+    // ---------- 自动状态文字 ----------
+    updateAutoStatus(state) {
+        const el = document.getElementById('auto-status-text');
+        if (!el) return;
+        const parts = [];
+        if (state.autoSettings.fight)       parts.push(`⚡自动战斗 ON (${state.autoSettings.fightInterval}ms)`);
+        if (state.autoSettings.explore)     parts.push('🗺️自动探索 ON');
+        if (state.autoSettings.smartUpgrade) parts.push(`🔧智能升级 ON (阈值${state.autoSettings.smartUpgradeThreshold}铁, 上限${state.autoSettings.smartUpgradeMaxAtk}攻)`);
+        if (state.autoSettings.autoDevour)   parts.push('🍽️自动吞噬 ON');
+        if (parts.length === 0) { el.textContent = '所有自动化功能已停止'; el.className = 'auto-status stopped'; }
+        else { el.textContent = parts.join(' | '); el.className = 'auto-status'; }
+
+        const hint = document.getElementById('auto-explore-hint');
+        if (hint) {
+            if (state.autoSettings.explore) {
+                const best = AutoSystem.pickBestMap(state);
+                const names = { mine: '矿洞', forest: '森林', volcano: '火山', star: '星空' };
+                hint.textContent = best ? `推荐地图: ${names[best]||best}` : '暂无推荐';
+            } else { hint.textContent = ''; }
+        }
+    },
+
+    // ============================================================
+    //  公会 / 组队 / 交易 渲染
+    // ============================================================
+
+    // ---------- 公会面板 ----------
+    renderGuildPanel(state) {
+        const container = document.getElementById('guild-body');
+        if (!container) return;
+        const guild = GuildSystem.getGuild(state);
+        if (!guild) {
+            // 未加入公会 → 显示创建/加入
+            let html = `<h4 style="color:#ffd700; margin-bottom:10px;">创建公会</h4>
+                <div style="display:flex; gap:8px; margin-bottom:15px;">
+                    <input type="text" id="guild-create-name" placeholder="公会名称" style="flex:1; padding:6px; border-radius:4px; border:1px solid #666; background:#333; color:white;">
+                    <button class="btn-action-main btn-forge" style="padding:6px 12px;" onclick="Game.createGuildFromUI()">创建</button>
+                </div>
+                <h4 style="color:#4fd1c7; margin-bottom:10px;">公会列表</h4>
+                <div id="guild-list"></div>`;
+            container.innerHTML = html;
+            this._renderGuildList(state);
+            return;
+        }
+
+        // 已加入公会
+        let html = `<h4 style="color:#ffd700;">⚔️ ${guild.name}</h4>`;
+        html += `<p style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">成员: ${guild.members.length} 人 | 你的贡献: ${state.guild.contribution || 0}</p>`;
+
+        // 成员列表
+        html += `<h5 style="color:#4fd1c7; margin:10px 0 5px;">成员</h5><div style="font-size:0.8rem;">`;
+        guild.members.forEach(m => {
+            html += `<div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dotted #444;">
+                <span>${m.name} (${m.weapon})</span><span>攻:${m.atk} | 捐赠:${m.donated}</span></div>`;
+        });
+        html += `</div>`;
+
+        // 公会仓库
+        html += `<h5 style="color:#ffd700; margin:10px 0 5px;">公会仓库</h5><div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">`;
+        Object.keys(guild.treasury || {}).forEach(matId => {
+            const count = guild.treasury[matId];
+            if (count > 0) html += `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:3px; font-size:0.75rem;">${state.materials[matId]?.icon||''} ${count}</span>`;
+        });
+        html += `</div>`;
+
+        // 捐赠
+        html += `<h5 style="color:#38a169; margin:10px 0 5px;">捐赠材料</h5>
+            <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px;" id="donate-row"></div>`;
+
+        // 公会科技
+        html += `<h5 style="color:#805ad5; margin:10px 0 5px;">公会科技</h5><div id="guild-tech-list"></div>`;
+
+        // 离开公会
+        html += `<button class="btn-action-main btn-new" style="margin-top:10px;" onclick="Game.leaveGuildFromUI()">离开公会</button>`;
+
+        container.innerHTML = html;
+        this._renderDonateRow(state);
+        this._renderGuildTech(state);
+    },
+
+    _renderGuildList(state) {
+        const container = document.getElementById('guild-list');
+        if (!container) return;
+        const guilds = GuildSystem.listGuilds();
+        if (guilds.length === 0) { container.innerHTML = '<p style="color:#aaa; font-size:0.8rem;">暂无公会，创建一个吧！</p>'; return; }
+        container.innerHTML = '';
+        guilds.forEach(g => {
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:6px; background:rgba(255,255,255,0.05); border-radius:5px; margin-bottom:5px; font-size:0.8rem;';
+            div.innerHTML = `<span>${g.name} (${g.memberCount}人, 总攻:${g.totalAtk})</span>
+                <button style="padding:3px 8px; font-size:0.7rem; border:none; border-radius:3px; background:#3182ce; color:white; cursor:pointer;" onclick="Game.joinGuildFromUI('${g.id}')">加入</button>`;
+            container.appendChild(div);
+        });
+    },
+
+    _renderDonateRow(state) {
+        const container = document.getElementById('donate-row');
+        if (!container) return;
+        Object.keys(state.materials).forEach(matId => {
+            const mat = state.materials[matId];
+            if (mat.count <= 0) return;
+            const btn = document.createElement('button');
+            btn.style.cssText = 'padding:3px 6px; font-size:0.7rem; border:1px solid #38a169; border-radius:3px; background:rgba(56,161,105,0.2); color:#68d391; cursor:pointer;';
+            btn.textContent = `${mat.icon} 捐1 (有${mat.count})`;
+            btn.onclick = () => Game.donateFromUI(matId, 1);
+            container.appendChild(btn);
+        });
+    },
+
+    _renderGuildTech(state) {
+        const container = document.getElementById('guild-tech-list');
+        if (!container) return;
+        const guild = GuildSystem.getGuild(state);
+        if (!guild) return;
+        container.innerHTML = '';
+        Object.keys(GUILD_TECH_DEFS).forEach(techId => {
+            const def = GUILD_TECH_DEFS[techId];
+            const lvl = guild.tech?.[techId] || 0;
+            const cost = def.cost(lvl);
+            const canUpgrade = (state.guild?.contribution || 0) >= cost && lvl < def.maxLv;
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:6px; background:rgba(255,255,255,0.05); border-radius:5px; margin-bottom:5px; font-size:0.8rem;';
+            div.innerHTML = `<div><strong style="color:#ffd700;">${def.name}</strong> Lv.${lvl}/${def.maxLv} <span style="color:#aaa; font-size:0.7rem;">${def.effect(lvl)}</span></div>
+                <button ${canUpgrade?'':'disabled'} style="padding:3px 8px; font-size:0.7rem; border:none; border-radius:3px; background:${canUpgrade?'#805ad5':'#666'}; color:white; cursor:${canUpgrade?'pointer':'not-allowed'};" onclick="Game.upgradeGuildTechFromUI('${techId}')">升级(${cost}贡献)</button>`;
+            container.appendChild(div);
+        });
+    },
+
+    // ---------- 组队副本面板 ----------
+    renderRaidPanel(state) {
+        const container = document.getElementById('raid-body');
+        if (!container) return;
+
+        let html = `<h4 style="color:#ffd700; margin-bottom:10px;">组队副本</h4>`;
+
+        // 我的当前副本
+        const myRaid = RaidSystem.getMyRaid(state);
+        if (myRaid) {
+            const def = RAID_DEFS.find(r => r.id === myRaid.raidId);
+            html += `<div style="background:rgba(229,62,62,0.1); border:1px solid #e53e3e; border-radius:8px; padding:10px; margin-bottom:10px;">
+                <h5 style="color:#e53e3e;">${def?.icon} ${def?.name} (${myRaid.status==='waiting'?'等待中':'战斗中'})</h5>
+                <p style="font-size:0.8rem;">BOSS HP: ${myRaid.bossHp.toFixed(0)} / ${myRaid.bossMaxHp}</p>
+                <div style="height:15px; background:#333; border-radius:5px; overflow:hidden; margin:5px 0;"><div style="height:100%; background:linear-gradient(90deg,#e53e3e,#ff8c00); width:${(myRaid.bossHp/myRaid.bossMaxHp)*100}%;"></div></div>
+                <p style="font-size:0.75rem; color:#aaa;">成员: ${myRaid.members.map(m=>m.name+'('+m.weapon+')').join(', ')}</p>`;
+            if (myRaid.status === 'waiting') {
+                html += `<button class="btn-action-main btn-forge" style="margin-top:5px;" onclick="Game.startRaidFromUI('${myRaid.id}')">开始战斗</button>`;
+            } else if (myRaid.status === 'completed') {
+                html += `<button class="btn-action-main btn-inventory" style="margin-top:5px;" onclick="Game.claimRaidFromUI('${myRaid.id}')">领取奖励</button>`;
+            } else {
+                html += `<button class="btn-action-main btn-talent" style="margin-top:5px;" onclick="Game.attackRaidFromUI('${myRaid.id}')">攻击BOSS</button>`;
+            }
+            html += `</div>`;
+        }
+
+        // 创建副本
+        if (!myRaid) {
+            html += `<h5 style="color:#4fd1c7; margin:5px 0;">创建副本</h5><div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">`;
+            RAID_DEFS.forEach(def => {
+                html += `<button style="padding:5px 10px; font-size:0.75rem; border:1px solid #4fd1c7; border-radius:5px; background:rgba(79,209,199,0.1); color:#4fd1c7; cursor:pointer;" onclick="Game.createRaidFromUI('${def.id}')">${def.icon} ${def.name} (${def.requiredMembers}人)</button>`;
+            });
+            html += `</div>`;
+        }
+
+        // 可加入的副本
+        const openRaids = RaidSystem.listOpenRaids(state);
+        html += `<h5 style="color:#ffd700; margin:10px 0 5px;">开放副本 (可加入)</h5>`;
+        if (openRaids.length === 0) {
+            html += `<p style="font-size:0.8rem; color:#aaa;">暂无开放副本</p>`;
+        } else {
+            openRaids.forEach(r => {
+                if (myRaid && myRaid.id === r.id) return;
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:5px; background:rgba(255,255,255,0.05); border-radius:5px; margin-bottom:3px; font-size:0.75rem;">
+                    <span>${r.name} (${r.host}, ${r.memberCount}/${r.maxMembers})</span>
+                    <button style="padding:2px 6px; font-size:0.7rem; border:none; border-radius:3px; background:#3182ce; color:white; cursor:pointer;" onclick="Game.joinRaidFromUI('${r.id}')">加入</button></div>`;
+            });
+        }
+
+        container.innerHTML = html;
+    },
+
+    // ---------- 交易/赠送面板 ----------
+    renderTradePanel(state) {
+        const container = document.getElementById('trade-body');
+        if (!container) return;
+
+        let html = `<h4 style="color:#ffd700; margin-bottom:10px;">📬 消息箱</h4>`;
+
+        // 收件箱
+        const inbox = TradeSystem.getInbox(state);
+        html += `<h5 style="color:#4fd1c7;">收件箱 (${inbox.length})</h5>`;
+        if (inbox.length === 0) html += `<p style="font-size:0.8rem; color:#aaa;">暂无消息</p>`;
+        inbox.forEach(msg => {
+            html += `<div style="background:rgba(255,255,255,0.05); border:1px solid #444; border-radius:6px; padding:8px; margin-bottom:5px; font-size:0.75rem;">
+                <div><strong>${msg.from}</strong> → 你 ${msg.type==='gift'?'🎁 赠送':'🔄 交易'}</div>`;
+            if (msg.type === 'gift') {
+                html += `<div>${state.materials[msg.matId]?.icon} x${msg.amount}${msg.message?` | 💬 ${msg.message}`:''}</div>
+                    <div style="margin-top:3px; display:flex; gap:5px;">
+                        <button style="padding:2px 6px; font-size:0.7rem; border:none; border-radius:3px; background:#38a169; color:white; cursor:pointer;" onclick="Game.acceptGiftFromUI('${msg.id}')">接受</button>
+                        <button style="padding:2px 6px; font-size:0.7rem; border:none; border-radius:3px; background:#e53e3e; color:white; cursor:pointer;" onclick="Game.deleteMessageFromUI('${msg.id}')">删除</button>
+                    </div>`;
+            } else {
+                const itemName = msg.item?.name || '未知物品';
+                html += `<div>提供: 【${itemName}】 请求: ${msg.requestAmount}${state.materials[msg.requestMatId]?.icon||''}</div>
+                    <div style="margin-top:3px; display:flex; gap:5px;">
+                        <button style="padding:2px 6px; font-size:0.7rem; border:none; border-radius:3px; background:#38a169; color:white; cursor:pointer;" onclick="Game.acceptTradeFromUI('${msg.id}')">接受</button>
+                        <button style="padding:2px 6px; font-size:0.7rem; border:none; border-radius:3px; background:#e53e3e; color:white; cursor:pointer;" onclick="Game.rejectTradeFromUI('${msg.id}')">拒绝</button>
+                    </div>`;
+            }
+            html += `</div>`;
+        });
+
+        // 发件箱
+        const outbox = TradeSystem.getOutbox(state);
+        html += `<h5 style="color:#d69e2e; margin:10px 0 5px;">发件箱 (${outbox.length})</h5>`;
+        if (outbox.length === 0) html += `<p style="font-size:0.8rem; color:#aaa;">暂无发送</p>`;
+        outbox.slice(0, 5).forEach(msg => {
+            const statusText = msg.type==='trade' ? (msg.status==='accepted'?'✅已接受':msg.status==='rejected'?'❌已拒绝':'⏳等待中') : '🎁已发送';
+            html += `<div style="background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:6px; padding:6px; margin-bottom:3px; font-size:0.7rem; color:#aaa;">
+                → ${msg.to} ${msg.type==='gift'?`${state.materials[msg.matId]?.icon}x${msg.amount}`:'物品交易'} ${statusText}</div>`;
+        });
+
+        // 发送赠送
+        html += `<h5 style="color:#38a169; margin:10px 0 5px;">发送赠送</h5>
+            <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:5px;">
+                <input type="text" id="gift-target" placeholder="目标玩家名" style="padding:4px; border-radius:3px; border:1px solid #666; background:#333; color:white; font-size:0.75rem; width:120px;">
+                <select id="gift-mat" style="padding:4px; border-radius:3px; background:#333; color:white; border:1px solid #666; font-size:0.75rem;"></select>
+                <input type="number" id="gift-amount" value="1" min="1" style="padding:4px; border-radius:3px; border:1px solid #666; background:#333; color:white; font-size:0.75rem; width:60px;">
+            </div>
+            <input type="text" id="gift-msg" placeholder="留言（可选）" style="padding:4px; border-radius:3px; border:1px solid #666; background:#333; color:white; font-size:0.75rem; width:100%; margin-bottom:5px;">
+            <button class="btn-action-main btn-inventory" style="padding:5px 12px;" onclick="Game.sendGiftFromUI()">🎁 发送赠送</button>`;
+
+        container.innerHTML = html;
+
+        // 填充材料下拉
+        const select = document.getElementById('gift-mat');
+        Object.keys(state.materials).forEach(matId => {
+            if (state.materials[matId].count > 0) {
+                const opt = document.createElement('option');
+                opt.value = matId;
+                opt.textContent = `${state.materials[matId].icon} ${state.materials[matId].name}`;
+                select.appendChild(opt);
+            }
+        });
+    },
+
+    // ---------- 排行榜面板 ----------
+    renderLeaderboard(state) {
+        const container = document.getElementById('leaderboard-body');
+        if (!container) return;
+        const rankings = LeaderboardSystem.getRankings();
+        const myBest = LeaderboardSystem.getMyBestRank(state);
+
+        let html = `<h4 style="color:#ffd700; margin-bottom:10px;">🏆 BOSS伤害排行榜</h4>`;
+        if (myBest) {
+            html += `<p style="font-size:0.8rem; color:#4fd1c7; margin-bottom:10px;">你的最佳排名: 第${myBest.rank}名 (伤害: ${myBest.bestDamage})</p>`;
+        }
+        html += `<div style="font-size:0.8rem;">`;
+        if (rankings.length === 0) html += '<p style="color:#aaa;">暂无数据</p>';
+        rankings.forEach((entry, i) => {
+            const isMe = entry.player === (state.playerName || '玩家');
+            html += `<div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dotted #444; ${isMe?'color:#ffd700; font-weight:bold;':''}">
+                <span>${i+1}. ${entry.player} (${entry.weapon})</span><span>${entry.damage.toLocaleString()}</span></div>`;
+        });
+        html += `</div>`;
+        container.innerHTML = html;
+    },
+};
+
+
+// ====== module boundary ======
+// ============================================================
+//  guild.js — 公会系统 / 组队副本 / 交易赠送
+//  所有数据存储在 localStorage（同设备多存档共享）
+// ============================================================
+
+
+const GUILD_STORAGE_KEY = 'DivineSword_Guilds';
+const RAID_STORAGE_KEY  = 'DivineSword_Raids';
+
+// ---------- 存储工具 ----------
+function loadGuilds() {
+    try { return JSON.parse(localStorage.getItem(GUILD_STORAGE_KEY)) || {}; }
+    catch { return {}; }
+}
+function saveGuilds(g) {
+    localStorage.setItem(GUILD_STORAGE_KEY, JSON.stringify(g));
+}
+function loadRaids() {
+    try { return JSON.parse(localStorage.getItem(RAID_STORAGE_KEY)) || {}; }
+    catch { return {}; }
+}
+function saveRaids(r) {
+    localStorage.setItem(RAID_STORAGE_KEY, JSON.stringify(r));
+}
+
+// ============================================================
+//  GuildSystem — 公会管理
+// ============================================================
+const GuildSystem = {
+    // ---------- 公会 CRUD ----------
+    createGuild(state, name) {
+        if (state.guild?.id) { return { ok: false, msg: "你已加入公会！" }; }
+        if (!name || name.trim().length === 0) { return { ok: false, msg: "公会名不能为空！" }; }
+        const guilds = loadGuilds();
+        const id = 'guild_' + Date.now();
+        const guild = {
+            id, name: name.trim(), createdAt: Date.now(),
+            members: [{
+                name: state.playerName || '玩家',
+                weapon: state.equipped.weapon?.name || '无名剑',
+                atk: state.equipped.weapon?.stats.attack || 0,
+                donated: 0,
+            }],
+            treasury: {},   // 公会仓库
+            tech: {},       // 公会科技等级
+            pendingDonations: [], // 待领取的捐赠
+        };
+        guilds[id] = guild;
+        saveGuilds(guilds);
+
+        state.guild = { id, name: guild.name, donated: 0, contribution: 0 };
+        return { ok: true, msg: `公会「${guild.name}」创建成功！` };
+    },
+
+    joinGuild(state, guildId) {
+        if (state.guild?.id) { return { ok: false, msg: "你已加入公会！" }; }
+        const guilds = loadGuilds();
+        const guild = guilds[guildId];
+        if (!guild) { return { ok: false, msg: "公会不存在！" }; }
+        guild.members.push({
+            name: state.playerName || '玩家',
+            weapon: state.equipped.weapon?.name || '无名剑',
+            atk: state.equipped.weapon?.stats.attack || 0,
+            donated: 0,
+        });
+        saveGuilds(guilds);
+        state.guild = { id: guildId, name: guild.name, donated: 0, contribution: 0 };
+        return { ok: true, msg: `已加入公会「${guild.name}」！` };
+    },
+
+    leaveGuild(state) {
+        if (!state.guild?.id) return { ok: false, msg: "你不在公会中！" };
+        const guilds = loadGuilds();
+        const guild = guilds[state.guild.id];
+        if (guild) {
+            guild.members = guild.members.filter(m => m.name !== (state.playerName || '玩家'));
+            if (guild.members.length === 0) {
+                delete guilds[state.guild.id];
+            }
+            saveGuilds(guilds);
+        }
+        const oldName = state.guild.name;
+        state.guild = null;
+        return { ok: true, msg: `已离开公会「${oldName}」` };
+    },
+
+    getGuild(state) {
+        if (!state.guild?.id) return null;
+        const guilds = loadGuilds();
+        return guilds[state.guild.id] || null;
+    },
+
+    listGuilds() {
+        const guilds = loadGuilds();
+        return Object.values(guilds).map(g => ({
+            id: g.id, name: g.name, memberCount: g.members.length,
+            totalAtk: g.members.reduce((s,m) => s + m.atk, 0),
+        }));
+    },
+
+    // ---------- 捐赠系统 ----------
+    donateMaterial(state, matId, amount) {
+        if (!state.guild?.id) return { ok: false, msg: "请先加入公会！" };
+        if ((state.materials[matId]?.count || 0) < amount) { return { ok: false, msg: "材料不足！" }; }
+        const guilds = loadGuilds();
+        const guild = guilds[state.guild.id];
+        if (!guild) return { ok: false, msg: "公会不存在！" };
+
+        state.materials[matId].count -= amount;
+        guild.treasury[matId] = (guild.treasury[matId] || 0) + amount;
+
+        const member = guild.members.find(m => m.name === (state.playerName || '玩家'));
+        if (member) member.donated += amount;
+        state.guild.donated = (state.guild.donated || 0) + amount;
+        state.guild.contribution = (state.guild.contribution || 0) + amount;
+        state.stats.donated = (state.stats.donated || 0) + amount;
+
+        saveGuilds(guilds);
+        return { ok: true, msg: `捐赠了 ${state.materials[matId]?.icon} ${amount} 个到公会仓库！贡献+${amount}` };
+    },
+
+    withdrawMaterial(state, matId, amount) {
+        if (!state.guild?.id) return { ok: false, msg: "请先加入公会！" };
+        const guilds = loadGuilds();
+        const guild = guilds[state.guild.id];
+        if (!guild) return { ok: false, msg: "公会不存在！" };
+        if ((guild.treasury[matId] || 0) < amount) { return { ok: false, msg: "公会仓库不足！" }; }
+        if ((state.guild.contribution || 0) < amount) { return { ok: false, msg: "贡献点不足！" }; }
+
+        guild.treasury[matId] -= amount;
+        state.materials[matId].count += amount;
+        state.guild.contribution -= amount;
+        saveGuilds(guilds);
+        return { ok: true, msg: `从公会仓库取出了 ${state.materials[matId]?.icon} x${amount}` };
+    },
+
+    // ---------- 公会科技 ----------
+    upgradeTech(state, techId) {
+        if (!state.guild?.id) return { ok: false, msg: "请先加入公会！" };
+        const def = GUILD_TECH_DEFS[techId];
+        if (!def) return { ok: false, msg: "未知科技！" };
+        const guilds = loadGuilds();
+        const guild = guilds[state.guild.id];
+        if (!guild) return { ok: false, msg: "公会不存在！" };
+
+        const currentLv = guild.tech[techId] || 0;
+        if (currentLv >= def.maxLv) { return { ok: false, msg: "已满级！" }; }
+        const cost = def.cost(currentLv);
+        if ((state.guild.contribution || 0) < cost) { return { ok: false, msg: `需要 ${cost} 贡献点！` }; }
+
+        state.guild.contribution -= cost;
+        guild.tech[techId] = currentLv + 1;
+        saveGuilds(guilds);
+        return { ok: true, msg: `公会科技「${def.name}」升至 Lv.${currentLv+1}！` };
+    },
+
+    // ---------- 公会加成预览 ----------
+    getGuildBonuses(state) {
+        const guild = this.getGuild(state);
+        if (!guild) return null;
+        const bonuses = {};
+        Object.keys(guild.tech || {}).forEach(techId => {
+            const lvl = guild.tech[techId];
+            const def = GUILD_TECH_DEFS[techId];
+            if (def) bonuses[techId] = { name: def.name, level: lvl, desc: def.effect(lvl) };
+        });
+        return bonuses;
+    },
+};
+
+// ============================================================
+//  RaidSystem — 组队副本
+// ============================================================
+const RaidSystem = {
+    // 创建副本队伍
+    createRaid(state, raidId) {
+        const def = RAID_DEFS.find(r => r.id === raidId);
+        if (!def) return { ok: false, msg: "副本不存在！" };
+
+        const raids = loadRaids();
+        const id = 'raid_' + Date.now();
+        const raid = {
+            id, raidId,
+            host: state.playerName || '玩家',
+            hostWeapon: state.equipped.weapon?.name || '无名剑',
+            hostAtk: Mechanics.getTotalStats(state).attack,
+            members: [{
+                name: state.playerName || '玩家',
+                weapon: state.equipped.weapon?.name || '无名剑',
+                atk: Mechanics.getTotalStats(state).attack,
+            }],
+            bossHp: def.bossHp, bossMaxHp: def.bossHp,
+            damageList: [],
+            status: 'waiting', // waiting | fighting | completed
+            createdAt: Date.now(),
+        };
+        raids[id] = raid;
+        saveRaids(raids);
+        return { ok: true, raidId: id, msg: `副本「${def.name}」已创建，等待队友加入...` };
+    },
+
+    // 加入副本
+    joinRaid(state, raidInstanceId) {
+        const raids = loadRaids();
+        const raid = raids[raidInstanceId];
+        if (!raid) return { ok: false, msg: "队伍不存在！" };
+        if (raid.status !== 'waiting') return { ok: false, msg: "队伍已开始战斗！" };
+        if (raid.members.length >= RAID_DEFS.find(r => r.id === raid.raidId)?.requiredMembers) {
+            return { ok: false, msg: "队伍已满！" };
+        }
+        raid.members.push({
+            name: state.playerName || '玩家',
+            weapon: state.equipped.weapon?.name || '无名剑',
+            atk: Mechanics.getTotalStats(state).attack,
+        });
+        saveRaids(raids);
+        return { ok: true, msg: `已加入副本队伍！(${raid.members.length}/${RAID_DEFS.find(r => r.id === raid.raidId).requiredMembers})` };
+    },
+
+    // 攻击副本BOSS（合并伤害）
+    attackRaidBoss(state, raidInstanceId) {
+        const raids = loadRaids();
+        const raid = raids[raidInstanceId];
+        if (!raid) return { ok: false, msg: "队伍不存在！" };
+        if (raid.status === 'completed') return { ok: false, msg: "副本已完成！" };
+
+        const stats = Mechanics.getTotalStats(state);
+        let damage = stats.attack * (0.8 + Math.random() * 0.4);
+        const isCrit = Math.random() * 100 < stats.crit;
+        if (isCrit) damage *= 1.5;
+
+        // 元素克制
+        const def = RAID_DEFS.find(r => r.id === raid.raidId);
+        const elemMult = Mechanics.getElementMultiplier(state.equipped.weapon?.element, def.element);
+        damage *= elemMult;
+
+        raid.bossHp -= damage;
+        const playerName = state.playerName || '玩家';
+        let record = raid.damageList.find(d => d.name === playerName);
+        if (record) record.damage += damage; else raid.damageList.push({ name: playerName, damage });
+
+        if (raid.bossHp <= 0) {
+            raid.bossHp = 0;
+            raid.status = 'completed';
+            saveRaids(raids);
+            return { ok: true, msg: `🎉 副本通关！总伤害: ${raid.damageList.reduce((s,d)=>s+d.damage,0).toFixed(0)}`, finished: true };
+        }
+        saveRaids(raids);
+        return { ok: true, msg: `对副本BOSS造成 ${damage.toFixed(0)} 伤害！BOSS剩余 HP: ${raid.bossHp.toFixed(0)}` };
+    },
+
+    // 领取副本奖励
+    claimRaidReward(state, raidInstanceId) {
+        const raids = loadRaids();
+        const raid = raids[raidInstanceId];
+        if (!raid) return { ok: false, msg: "队伍不存在！" };
+        if (raid.status !== 'completed') return { ok: false, msg: "副本未完成！" };
+
+        const def = RAID_DEFS.find(r => r.id === raid.raidId);
+        if (!def) return { ok: false, msg: "副本定义丢失！" };
+
+        // 全员均分奖励
+        const memberCount = raid.members.length;
+        Object.keys(def.reward).forEach(matId => {
+            if (matId === 'sp') {
+                state.sp += def.reward[matId];
+            } else if (state.materials[matId]) {
+                const share = Math.ceil(def.reward[matId] / memberCount);
+                state.materials[matId].count += share;
+            }
+        });
+        state.stats.teamRaids = (state.stats.teamRaids || 0) + 1;
+
+        // 删除副本记录
+        delete raids[raidInstanceId];
+        saveRaids(raids);
+        return { ok: true, msg: `领取了副本奖励！SP+${def.reward.sp}` };
+    },
+
+    listOpenRaids(state) {
+        const raids = loadRaids();
+        return Object.values(raids).filter(r => r.status === 'waiting').map(r => {
+            const def = RAID_DEFS.find(d => d.id === r.raidId);
+            return {
+                id: r.id, name: def?.name || '未知副本',
+                host: r.host, memberCount: r.members.length,
+                maxMembers: def?.requiredMembers || 0,
+                bossHp: r.bossHp, bossMaxHp: r.bossMaxHp,
+            };
+        });
+    },
+
+    getMyRaid(state) {
+        const raids = loadRaids();
+        return Object.values(raids).find(r =>
+            r.members.some(m => m.name === (state.playerName || '玩家'))
+        ) || null;
+    },
+};
+
+// ============================================================
+//  TradeSystem — 交易 / 赠送
+// ============================================================
+const TRADE_STORAGE_KEY = 'DivineSword_Trades';
+
+function loadTrades() {
+    try { return JSON.parse(localStorage.getItem(TRADE_STORAGE_KEY)) || []; }
+    catch { return []; }
+}
+function saveTrades(t) {
+    localStorage.setItem(TRADE_STORAGE_KEY, JSON.stringify(t));
+}
+const TradeSystem = {
+    // 发送赠送（材料 + 留言）
+    sendGift(state, targetPlayerName, matId, amount, message) {
+        if (!targetPlayerName || targetPlayerName === (state.playerName || '玩家')) {
+            return { ok: false, msg: "不能赠送给自己！" };
+        }
+        if ((state.materials[matId]?.count || 0) < amount) {
+            return { ok: false, msg: "材料不足！" };
+        }
+        state.materials[matId].count -= amount;
+        const trades = loadTrades();
+        const gift = {
+            id: 'gift_' + Date.now(),
+            type: 'gift',
+            from: state.playerName || '玩家',
+            to: targetPlayerName,
+            matId, amount, message: message || '',
+            timestamp: Date.now(),
+            read: false,
+        };
+        trades.push(gift);
+        saveTrades(trades);
+        state.stats.trades = (state.stats.trades || 0) + 1;
+        return { ok: true, msg: `已向 ${targetPlayerName} 赠送 ${state.materials[matId]?.icon} x${amount}` };
+    },
+
+    // 发送装备交易提议
+    offerItem(state, targetPlayerName, itemId, requestMatId, requestAmount) {
+        const item = state.inventory.find(i => i.id === itemId);
+        if (!item) return { ok: false, msg: "物品不存在！" };
+        if (item.type === 'weapon' && state.equipped.weapon?.id === item.id) {
+            return { ok: false, msg: "不能交易正在装备的武器！" };
+        }
+        const trades = loadTrades();
+        const offer = {
+            id: 'trade_' + Date.now(),
+            type: 'trade',
+            from: state.playerName || '玩家',
+            to: targetPlayerName,
+            item: { ...item },
+            requestMatId, requestAmount,
+            timestamp: Date.now(),
+            status: 'pending', // pending | accepted | rejected
+        };
+        trades.push(offer);
+        saveTrades(trades);
+        return { ok: true, msg: `已向 ${targetPlayerName} 发起交易提议！` };
+    },
+
+    // 查看收到的消息
+    getInbox(state) {
+        const trades = loadTrades();
+        const myName = state.playerName || '玩家';
+        return trades.filter(t => t.to === myName).sort((a,b) => b.timestamp - a.timestamp);
+    },
+
+    // 查看发出的消息
+    getOutbox(state) {
+        const trades = loadTrades();
+        const myName = state.playerName || '玩家';
+        return trades.filter(t => t.from === myName).sort((a,b) => b.timestamp - a.timestamp);
+    },
+
+    // 接受赠送
+    acceptGift(state, giftId) {
+        const trades = loadTrades();
+        const gift = trades.find(t => t.id === giftId);
+        if (!gift || gift.type !== 'gift') return { ok: false, msg: "赠送不存在！" };
+        if (gift.to !== (state.playerName || '玩家')) return { ok: false, msg: "不是给你的！" };
+
+        if (state.materials[gift.matId]) {
+            state.materials[gift.matId].count += gift.amount;
+        }
+        // 从列表中移除
+        const idx = trades.indexOf(gift);
+        trades.splice(idx, 1);
+        saveTrades(trades);
+        state.stats.trades = (state.stats.trades || 0) + 1;
+        return { ok: true, msg: `收到了 ${state.materials[gift.matId]?.icon} x${gift.amount}！` };
+    },
+
+    // 接受交易
+    acceptTrade(state, tradeId) {
+        const trades = loadTrades();
+        const trade = trades.find(t => t.id === tradeId);
+        if (!trade || trade.type !== 'trade') return { ok: false, msg: "交易不存在！" };
+        if (trade.to !== (state.playerName || '玩家')) return { ok: false, msg: "不是给你的！" };
+        if (trade.status !== 'pending') return { ok: false, msg: "交易已处理！" };
+
+        // 检查是否有请求的材料
+        if (trade.requestMatId && trade.requestAmount > 0) {
+            if ((state.materials[trade.requestMatId]?.count || 0) < trade.requestAmount) {
+                return { ok: false, msg: `需要 ${trade.requestAmount} 个 ${trade.requestMatId}！` };
+            }
+            state.materials[trade.requestMatId].count -= trade.requestAmount;
+        }
+
+        // 接收物品
+        const newItem = { ...trade.item, id: Date.now() + Math.random() };
+        state.inventory.push(newItem);
+
+        trade.status = 'accepted';
+        saveTrades(trades);
+        state.stats.trades = (state.stats.trades || 0) + 1;
+        return { ok: true, msg: `交易成功！获得了【${newItem.name}】` };
+    },
+
+    // 拒绝
+    rejectTrade(state, tradeId) {
+        const trades = loadTrades();
+        const trade = trades.find(t => t.id === tradeId);
+        if (!trade) return { ok: false, msg: "不存在！" };
+        trade.status = 'rejected';
+        saveTrades(trades);
+        return { ok: true, msg: "已拒绝" };
+    },
+
+    // 删除消息
+    deleteMessage(state, msgId) {
+        const trades = loadTrades();
+        const idx = trades.findIndex(t => t.id === msgId);
+        if (idx >= 0) { trades.splice(idx, 1); saveTrades(trades); }
+        return { ok: true };
+    },
+};
+
+// ============================================================
+//  LeaderboardSystem — 多人排行榜（本地版）
+//  利用 localStorage 存储所有存档的 BOSS 战绩
+// ============================================================
+const LEADERBOARD_KEY = 'DivineSword_Leaderboard';
+const LeaderboardSystem = {
+    // 提交一次 BOSS 战绩
+    submitBossScore(state, damage) {
+        const boards = this._load();
+        const entry = {
+            player: state.playerName || '玩家',
+            weapon: state.equipped.weapon?.name || '无名剑',
+            damage: Math.floor(damage),
+            timestamp: Date.now(),
+        };
+        boards.push(entry);
+        // 只保留最近 100 条
+        if (boards.length > 100) boards.splice(0, boards.length - 100);
+        localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(boards));
+    },
+
+    // 获取排行榜（按伤害降序）
+    getRankings() {
+        const boards = this._load();
+        return boards.sort((a, b) => b.damage - a.damage).slice(0, 20);
+    },
+
+    // 获取玩家最佳排名
+    getMyBestRank(state) {
+        const myName = state.playerName || '玩家';
+        const boards = this._load().filter(b => b.player === myName).sort((a,b) => b.damage - a.damage);
+        if (boards.length === 0) return null;
+        const allSorted = this._load().sort((a,b) => b.damage - a.damage);
+        const rank = allSorted.findIndex(b => b.player === myName && b.damage === boards[0].damage);
+        return { rank: rank + 1, bestDamage: boards[0].damage };
+    },
+
+    _load() {
+        try { return JSON.parse(localStorage.getItem(LEADERBOARD_KEY)) || []; }
+        catch { return []; }
+    },
+};
+
+
+// ====== module boundary ======
+// ============================================================
+//  game.js — 主控制器
+//  串联数据、机制、渲染、UI、特效、日志、公会、组队、交易
+// ============================================================
+const Game = {
+    state: null,
+
+    // ==================== 初始化 ====================
+    init() {
+        this.state = this._createDefaultState();
+        this.initMaterials();
+        this.initEquipment();
+        this.initQuests();
+        this.loadGame(); // 迁移 + 加载
+        this._migrateState();
+        this._syncUIFromState();
+
+        Renderer.init(this.state);
+        this.bindEvents();
+        this.checkOfflineProgress();
+        addLog("欢迎回到神剑仙域！", 'log-reward');
+        this.checkAchievements();
+        this.startGameLoop();
+    },
+
+    _createDefaultState() {
+        return {
+            playerName: '玩家',
+            sp: 0, stamina: 30, maxStamina: 30, lastSave: Date.now(),
+            inventory: [], equipped: { weapon: null, ring: null, amulet: null, armor: null },
+            talents: { forge: 0, sword: 0, survival: 0, gather: 0 },
+            materials: {}, monster: { name: "史莱姆", icon: "👾", element: "water", hp: 50, maxHp: 50, level: 1 },
+            boss: { name: "远古巨龙", icon: "🐉", element: "fire", hp: 1000000, maxHp: 1000000, timer: 60, damageList: [] },
+            quests: [], achievements: {}, stats: { kills: 0, crits: 0, gathered: 0, forged: 0, forgeFailures: 0, autoFightCount: 0, donated: 0, teamRaids: 0, trades: 0 },
+            secretSwordsUnlocked: [],
+            autoSettings: { fight: false, explore: false, fightInterval: 500, smartUpgrade: false, smartUpgradeThreshold: 50, smartUpgradeMaxAtk: 9999, smartUpgradeReserve: 0, autoDevour: false, logFilter: 'all' },
+            forgeRecipes: FORGE_RECIPES,
+            talentDefs: TALENT_DEFS,
+            questDefs: QUEST_DEFS,
+            achievementDefs: ACHIEVEMENT_DEFS,
+            guild: null, // { id, name, donated, contribution }
+        };
+    },
+
+    _migrateState() {
+        // 确保所有新字段存在
+        const def = this._createDefaultState();
+        // 深合并默认值
+        this.state = this.deepMerge(def, this.state);
+        // 确保 stats 子字段
+        const defaultStats = def.stats;
+        this.state.stats = { ...defaultStats, ...(this.state.stats || {}) };
+        // 确保 autoSettings
+        this.state.autoSettings = { ...def.autoSettings, ...(this.state.autoSettings || {}) };
+    },
+
+    _syncUIFromState() {
+        document.getElementById('auto-fight-interval').value = this.state.autoSettings.fightInterval;
+        document.getElementById('smart-upgrade-enabled').checked = this.state.autoSettings.smartUpgrade;
+        document.getElementById('smart-upgrade-threshold').value = this.state.autoSettings.smartUpgradeThreshold;
+        document.getElementById('smart-upgrade-maxatk').value = this.state.autoSettings.smartUpgradeMaxAtk;
+        document.getElementById('smart-upgrade-reserve').value = this.state.autoSettings.smartUpgradeReserve;
+        document.getElementById('auto-devour-enabled').checked = this.state.autoSettings.autoDevour;
+    },
+
+    // ==================== 数据初始化 ====================
+    initMaterials() {
+        MATERIAL_DEFS.forEach(m => { this.state.materials[m.id] = { ...m, count: 0 }; });
+    },
+    initEquipment() {
+        const starter = this.state.forgeRecipes.find(r => r.id === 'starter');
+        this.state.inventory.push({ ...starter });
+        this.state.equipped.weapon = { ...starter };
+    },
+    initQuests() { this.generateDailyQuests(); },
+
+    // ==================== 事件绑定 ====================
+    bindEvents() {
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') { e.preventDefault(); this.attackMonster(); }
+            if (e.code === 'KeyB' && e.ctrlKey) { e.preventDefault(); this.attackBoss(); }
+        });
+        setInterval(() => this.saveGame(), 30000);
+        setInterval(() => this.saveToSlot('auto'), 30000);
+        // 批量锻造输入变化
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'batch-forge-select' || e.target.id === 'batch-forge-count') {
+                UIManager._updateBatchForgeInfo(this.state);
+            }
+        });
+    },
+
+    // ==================== 主循环 ====================
+    startGameLoop() {
+        setInterval(() => this.tickAutoFight(), 100);
+        setInterval(() => this.globalTick(), 1000);
+    },
+
+    tickAutoFight() {
+        if (!this.state.autoSettings.fight) return;
+        const interval = this.state.autoSettings.fightInterval;
+        const now = Date.now();
+        if (!this._lastAutoFight) this._lastAutoFight = now;
+        if (now - this._lastAutoFight < interval) return;
+        this._lastAutoFight = now;
+        const m = this.state.monster;
+        if (m.hp > 0) { this.attackMonster(true); this.state.stats.autoFightCount++; }
+        else { this.nextMonster(); }
+    },
+
+    globalTick() {
+        // 体力恢复
+        const now = Date.now();
+        if (!this._lastStaminaTick) this._lastStaminaTick = now;
+        if (now - this._lastStaminaTick >= 10000) {
+            this._lastStaminaTick = now;
+            if (this.state.stamina < this.state.maxStamina) {
+                this.state.stamina = Math.min(this.state.maxStamina, this.state.stamina + 1);
+                Renderer.updateStamina(this.state);
+            }
+        }
+        // BOSS 计时
+        if (this.state.boss.timer > 0) {
+            this.state.boss.timer--;
+            Renderer.updateBoss(this.state);
+            if (this.state.boss.timer <= 0) {
+                addLog("远古巨龙消失了...", 'log-normal');
+                this.state.boss.hp = 0;
+                Renderer.updateBoss(this.state);
+            }
+        }
+        // 智能升级
+        if (this.state.autoSettings.smartUpgrade) this.tickSmartUpgrade();
+        // 自动吞噬
+        if (this.state.autoSettings.autoDevour) this.tickAutoDevour();
+        // 自动探索
+        if (this.state.autoSettings.explore) this.tickAutoExplore();
+        // 渲染更新
+        Renderer.updateMapRecommendation(this.state);
+        Renderer.updateAutoStatus(this.state);
+    },
+
+    // ==================== 核心战斗 ====================
+    upgradeSword() {
+        const cost = Math.ceil(5 * (this.state.equipped.weapon?.stats.attack || 10) * (1 - this.state.talents.forge * 0.05) * Mechanics.getGuildTechMultiplier(this.state, 'forge_cost'));
+        if (this.state.materials.iron.count < cost) { addLog("精铁不足！"); return; }
+        this.state.materials.iron.count -= cost;
+        this.state.equipped.weapon.stats.attack += 10;
+        this.state.equipped.weapon.stats.crit += 1;
+        this.state.sp++; this.state.stats.forged++;
+        addLog(`神剑升级！攻击+10，暴击+1%！获得1技能点。`);
+        this.updateAndRender();
+    },
+
+    attackMonster(isAuto = false) {
+        const m = this.state.monster; if (m.hp <= 0) return;
+        const stats = Mechanics.getTotalStats(this.state);
+        let damage = stats.attack;
+        let isCrit = Math.random() * 100 < stats.crit;
+        let logClass = 'log-normal';
+        if (isCrit) { damage *= (1 + this.state.talents.sword * 0.1); this.state.stats.crits++; logClass = 'log-crit'; Effects.showCrit(); }
+        const elemMult = Mechanics.getElementMultiplier(this.state.equipped.weapon?.element, m.element);
+        if (elemMult > 1) { damage *= elemMult * Mechanics.getGuildTechMultiplier(this.state, 'elemental'); logClass = 'log-elem'; if (!isAuto) addLog(`属性克制！伤害${elemMult}x！`, logClass); }
+        else if (elemMult < 1 && elemMult > 0) { damage *= elemMult; if (!isAuto) addLog(`属性被抵抗！`, 'log-normal'); }
+        const dmgResult = Mechanics.calculateDamage(this.state, stats);
+        if (dmgResult.type === 'dodge') { logClass = 'log-dodge'; if (!isAuto) addLog("你闪避了攻击！", 'log-dodge'); }
+        else if (dmgResult.type === 'block') { logClass = 'log-block'; if (!isAuto) addLog("你格挡了攻击！", 'log-block'); }
+        else { if (!isAuto) addLog(`怪物反击你，造成${dmgResult.damage}点伤害。`, 'log-normal'); }
+        m.hp -= damage; if (m.hp < 0) m.hp = 0;
+        if (!isAuto) { Effects.showDamage(damage, isCrit, m.icon); Effects.shakeScreen(); }
+        addLog(`${isAuto?'[自动] ':''}${dmgResult.type==='dodge'?'闪避后反击':'攻击'} ${m.name}，造成 <span class="${logClass}">${damage.toFixed(1)}</span> 点伤害。`, logClass);
+        if (m.hp <= 0) {
+            addLog(`${isAuto?'[自动] ':''}击败了${m.name}！`);
+            this.state.stats.kills++; Mechanics.dropLoot(this.state, addLog); this.state.sp++;
+            this.updateAndRender(); this.checkAchievements();
+        } else { Renderer.updateMonster(this.state); }
+    },
+
+    nextMonster() {
+        const s = this.state;
+        if (s.monster.hp > 0) { addLog("请先击败当前怪物！"); return; }
+        s.monster.level++;
+        const idx = Math.min(s.monster.level - 1, MONSTER_DEFS.length - 1);
+        const baseHp = 50 + s.monster.level * 30;
+        Object.assign(s.monster, MONSTER_DEFS[idx], { hp: baseHp, maxHp: baseHp });
+        addLog(`遭遇 ${s.monster.name} Lv.${s.monster.level} (属性:${Mechanics.getElementIcon(s.monster.element)})!`);
+        Renderer.updateMonster(s);
+    },
+
+    explore(mapId, isAuto = false) {
+        const cost = MAP_DEFS[mapId]?.cost;
+        if (!cost) return;
+        if (this.state.stamina < cost) { if (!isAuto) addLog("体力不足！"); return; }
+        this.state.stamina -= cost;
+        Renderer.updateStamina(this.state);
+        const drops = MAP_DEFS[mapId].drops;
+        const dropId = drops[Math.floor(Math.random() * drops.length)];
+        const gatherBonus = 1 + this.state.talents.gather * 0.2;
+        let amount = Math.ceil((Math.random() * 2 + 1) * gatherBonus);
+        // 公会幸运拾取
+        if (this.state.guild?.tech?.loot_luck) amount = Math.ceil(amount * (1 + this.state.guild.tech.loot_luck * 0.1));
+        this.state.materials[dropId].count += amount;
+        this.state.stats.gathered += amount;
+        const names = { mine: '矿洞', forest: '森林', volcano: '火山', star: '星空' };
+        addLog(`${isAuto?'[自动探索] ':''}${names[mapId]||mapId}获得: ${this.state.materials[dropId].icon} ${this.state.materials[dropId].name} x${amount}`, 'log-auto');
+        if (Math.random() < 0.1) {
+            const gearRecipes = this.state.forgeRecipes.filter(r => r.type !== 'weapon');
+            const recipe = gearRecipes[Math.floor(Math.random() * gearRecipes.length)];
+            this.state.inventory.push({ ...recipe, id: Date.now() + Math.random() });
+            addLog(`${isAuto?'[自动探索] ':''}<span style="color:gold">发现装备：【${recipe.name}】！</span>`);
+        }
+        this.updateAndRender();
+    },
+
+    attackBoss() {
+        const boss = this.state.boss;
+        if (boss.hp <= 0 || boss.timer <= 0) { addLog("BOSS已消失或时间结束！"); return; }
+        const stats = Mechanics.getTotalStats(this.state);
+        let damage = stats.attack * (0.8 + Math.random() * 0.4);
+        let isCrit = Math.random() * 100 < stats.crit;
+        let logClass = 'log-normal';
+        if (isCrit) { damage *= (1 + this.state.talents.sword * 0.1); logClass = 'log-crit'; }
+        const elemMult = Mechanics.getElementMultiplier(this.state.equipped.weapon?.element, boss.element);
+        if (elemMult > 1) { damage *= elemMult * Mechanics.getGuildTechMultiplier(this.state, 'elemental'); logClass = 'log-elem'; }
+        boss.hp -= damage; if (boss.hp < 0) boss.hp = 0;
+        const playerName = this.state.equipped.weapon?.name || "无名侠客";
+        let record = boss.damageList.find(d => d.name === playerName);
+        if (record) record.damage += damage; else boss.damageList.push({ name: playerName, damage });
+        boss.damageList.sort((a, b) => b.damage - a.damage);
+        Effects.showDamage(damage, isCrit, boss.icon);
+        addLog(`对BOSS造成 <span class="${logClass}">${damage.toFixed(1)}</span> 点伤害！`, logClass);
+        Renderer.updateBoss(this.state);
+        if (boss.hp <= 0) {
+            addLog("<span style='color:gold'>恭喜！击败了远古巨龙！</span>", 'log-elem');
+            this.settleBossRewards();
+            LeaderboardSystem.submitBossScore(this.state, this.state.boss.damageList.find(d=>d.name===playerName)?.damage || 0);
+            this.checkAchievements();
+        }
+    },
+
+    settleBossRewards() {
+        const boss = this.state.boss;
+        const playerName = this.state.equipped.weapon?.name || "无名侠客";
+        const playerRecord = boss.damageList.find(d => d.name === playerName);
+        if (!playerRecord) return;
+        const rank = boss.damageList.indexOf(playerRecord) + 1;
+        let bloodReward = rank === 1 ? 10 : rank <= 3 ? 5 : rank <= 5 ? 2 : 0;
+        if (bloodReward > 0) { this.state.materials.blood.count += bloodReward; addLog(`BOSS结算：排名第${rank}，获得 🩸龙血 x${bloodReward}！`, 'log-reward'); this.updateAndRender(); }
+    },
+
+    resetBoss() {
+        const boss = this.state.boss;
+        boss.hp = boss.maxHp; boss.timer = 60; boss.damageList = [];
+        addLog("世界BOSS已刷新！"); Renderer.updateBoss(this.state);
+    },
+
+    // ==================== 智能升级 / 吞噬 / 探索 ====================
+    tickSmartUpgrade() {
+        const s = this.state.autoSettings;
+        const weapon = this.state.equipped.weapon;
+        if (!weapon || weapon.stats.attack >= s.smartUpgradeMaxAtk) return;
+        const cost = Math.ceil(5 * weapon.stats.attack * (1 - this.state.talents.forge * 0.05) * Mechanics.getGuildTechMultiplier(this.state, 'forge_cost'));
+        if (this.state.materials.iron.count >= cost + s.smartUpgradeReserve && this.state.materials.iron.count >= s.smartUpgradeThreshold) {
+            this.state.materials.iron.count -= cost;
+            weapon.stats.attack += 10; weapon.stats.crit += 1;
+            this.state.sp++; this.state.stats.forged++;
+            addLog(`[智能升级] 攻击+10 → ${weapon.stats.attack}，暴击+1% → ${weapon.stats.crit}%`, 'log-auto');
+            this.updateAndRender();
+        }
+    },
+
+    tickAutoDevour() {
+        const weapon = this.state.equipped.weapon;
+        if (!weapon) return;
+        const threshold = weapon.stats.attack * 0.5;
+        const candidates = this.state.inventory.filter(i => i.type === 'weapon' && i.id !== weapon.id && !i.secret && i.stats.attack < threshold);
+        if (candidates.length === 0) return;
+        const target = candidates.reduce((min, cur) => cur.stats.attack < min.stats.attack ? cur : min, candidates[0]);
+        this.devourSword(target.id, true);
+    },
+
+    tickAutoExplore() {
+        if (this.state.stamina <= 0) { addLog("[自动探索] 体力耗尽，停止", 'log-auto'); this.state.autoSettings.explore = false; Renderer.updateAutoButtons(this.state); return; }
+        const mapId = AutoSystem.pickBestMap(this.state);
+        if (!mapId) { addLog("[自动探索] 没有合适的地图", 'log-auto'); this.state.autoSettings.explore = false; Renderer.updateAutoButtons(this.state); return; }
+        const cost = MAP_DEFS[mapId].cost;
+        if (this.state.stamina < cost) {
+            const cheaper = Object.keys(MAP_DEFS).filter(m => MAP_DEFS[m].cost <= this.state.stamina);
+            if (cheaper.length === 0) { addLog("[自动探索] 体力不足", 'log-auto'); this.state.autoSettings.explore = false; Renderer.updateAutoButtons(this.state); return; }
+            this.explore(cheaper[0], true);
+        } else { this.explore(mapId, true); }
+    },
+
+    // ==================== 天赋 ====================
+    learnTalent(type) {
+        if (this.state.sp <= 0) return;
+        const def = this.state.talentDefs[type];
+        if (this.state.talents[type] >= def.maxLv) { addLog("该天赋已达上限！"); return; }
+        this.state.talents[type]++; this.state.sp--;
+        addLog(`习得 ${def.name} Lv.${this.state.talents[type]}！${def.desc}`); this.updateAndRender();
+    },
+
+    // ==================== UI 快捷入口 ====================
+    openInventory(filterType) { UIManager.openInventoryModal(this.state, filterType); },
+    openForgeModal() { UIManager.openForgeModal(this.state); },
+    openTalentModal() { UIManager.openTalentModal(this.state); },
+
+    // ==================== 装备操作 ====================
+    equipItem(itemId) {
+        const item = this.state.inventory.find(i => i.id === itemId);
+        if (!item) return;
+        this.state.equipped[item.type] = item;
+        addLog(`装备了【${item.name}】`); this.updateAndRender();
+        UIManager.closeModal('inventory-modal');
+        UIManager.openInventoryModal(this.state, item.type);
+    },
+
+    forgeItem(recipeId) {
+        const recipe = this.state.forgeRecipes.find(r => r.id === recipeId);
+        if (!recipe) return;
+        if (recipe.secret && recipe.condition && !recipe.condition(this.state)) { addLog(`锻造【${recipe.name}】条件未满足！`, 'log-secret'); return; }
+        const successRate = recipe.secret ? 0.8 : 1.0;
+        if (Math.random() > successRate) {
+            addLog(`锻造【${recipe.name}】失败了...`, 'log-normal');
+            this.state.stats.forgeFailures++; this.checkSecretSwords(); this.updateAndRender(); return;
+        }
+        for (const matId in recipe.req) { if (this.state.materials[matId].count < recipe.req[matId]) { addLog("材料不足！"); return; } }
+        for (const matId in recipe.req) { this.state.materials[matId].count -= recipe.req[matId]; }
+        const newItem = { ...recipe, id: Date.now() + Math.random() };
+        this.state.inventory.push(newItem); this.state.stats.forged++; this.state.stats.forgeFailures = 0;
+        addLog(`<span style="color:gold">锻造成功！获得【${newItem.name}】！</span>`);
+        Effects.forgeFlash(); this.updateAndRender();
+        UIManager.openForgeModal(this.state);
+    },
+
+    batchForge(recipeId, count) {
+        const recipe = this.state.forgeRecipes.find(r => r.id === recipeId);
+        if (!recipe) return { success: 0, fail: 0 };
+        let successCount = 0, failCount = 0;
+        for (let i = 0; i < count; i++) {
+            let canForge = true;
+            for (const matId in recipe.req) { if (this.state.materials[matId].count < recipe.req[matId]) { canForge = false; break; } }
+            if (!canForge) { addLog(`批量锻造: 材料不足，已锻造 ${successCount} 次后停止`, 'log-normal'); break; }
+            for (const matId in recipe.req) { this.state.materials[matId].count -= recipe.req[matId]; }
+            if (Math.random() <= (recipe.secret ? 0.8 : 1.0)) { this.state.inventory.push({ ...recipe, id: Date.now() + Math.random() + i }); successCount++; }
+            else { failCount++; this.state.stats.forgeFailures++; }
+            this.state.stats.forged++;
+        }
+        this.checkSecretSwords();
+        return { success: successCount, fail: failCount };
+    },
+
+    devourSword(itemId, isAuto = false) {
+        const idx = this.state.inventory.findIndex(i => i.id === itemId);
+        if (idx === -1) return;
+        const item = this.state.inventory[idx];
+        if (item.type !== 'weapon') { addLog("只能吞噬武器！"); return; }
+        if (this.state.equipped.weapon?.id === item.id) { addLog("不能吞噬正在装备的武器！"); return; }
+        if (item.secret) { addLog("传说中的神剑不可吞噬！", 'log-secret'); return; }
+        const expGain = Math.floor(item.stats.attack / 2);
+        this.state.equipped.weapon.stats.attack += expGain;
+        this.state.inventory.splice(idx, 1);
+        addLog(`${isAuto?'[自动] ':''}吞噬了【${item.name}】，主剑攻击力 +${expGain}`, 'log-reward');
+        this.updateAndRender();
+        if (!isAuto) UIManager.openInventoryModal(this.state);
+    },
+
+    // ==================== 隐藏剑 ====================
+    checkSecretSwords() {
+        this.state.forgeRecipes.forEach(recipe => {
+            if (recipe.secret && recipe.condition && recipe.condition(this.state)) {
+                if (!this.state.secretSwordsUnlocked.includes(recipe.id)) {
+                    this.state.secretSwordsUnlocked.push(recipe.id);
+                    addLog(`<span style="color:gold; font-size:1.2em;">💡 领悟了隐藏神剑的锻造之法：【${recipe.name}】！</span>`, 'log-secret');
+                    this.updateAndRender();
+                }
+            }
+        });
+    },
+
+    // ==================== 离线收益 ====================
+    checkOfflineProgress() {
+        const now = Date.now();
+        const offlineTime = Math.min(now - this.state.lastSave, 24 * 60 * 60 * 1000);
+        if (offlineTime < 5000) return;
+        const seconds = Math.floor(offlineTime / 1000);
+        const dps = Mechanics.getTotalStats(this.state).attack * 0.5;
+        let totalDamage = dps * seconds, kills = 0, currentHp = this.state.monster.maxHp, totalMaterials = {};
+        while (totalDamage > 0 && kills < 1000) {
+            const dmg = Math.min(totalDamage, currentHp);
+            totalDamage -= dmg; currentHp -= dmg;
+            if (currentHp <= 0) {
+                kills++;
+                const mats = Object.keys(this.state.materials);
+                const dropMat = mats[Math.floor(Math.random() * mats.length)];
+                const amount = Math.ceil((Math.random() * 2 + 1) * (1 + this.state.talents.gather * 0.2));
+                totalMaterials[dropMat] = (totalMaterials[dropMat] || 0) + amount;
+                currentHp = this.state.monster.maxHp;
+            }
+        }
+        this.state.stats.kills += kills;
+        for (const matId in totalMaterials) { this.state.materials[matId].count += totalMaterials[matId]; }
+        UIManager.showOfflineReport(this.state, seconds, kills, totalMaterials);
+        this.updateAndRender();
+    },
+
+    // ==================== 任务与成就 ====================
+    generateDailyQuests() {
+        const shuffled = [...this.state.questDefs].sort(() => 0.5 - Math.random());
+        this.state.quests = shuffled.slice(0, 3).map(q => ({ ...q, progress: 0, completed: false }));
+    },
+    updateQuests() {
+        this.state.quests.forEach(quest => {
+            if (quest.completed) return;
+            quest.progress = Math.min((this.state.stats[quest.type] || 0), quest.target);
+            if (quest.progress >= quest.target && !quest.completed) { quest.completed = true; this.completeQuest(quest); }
+        });
+    },
+    completeQuest(quest) {
+        addLog(`<span style="color:gold">任务完成：【${quest.name}】！获得奖励！</span>`, 'log-reward');
+        this.state.sp += quest.reward.sp || 0;
+        for (const matId in quest.reward) { if (this.state.materials[matId]) this.state.materials[matId].count += quest.reward[matId]; }
+    },
+    checkAchievements() {
+        this.state.achievementDefs.forEach(ach => {
+            if (!this.state.achievements[ach.id] && ach.condition(this.state)) {
+                this.state.achievements[ach.id] = true;
+                addLog(`<span style="color:gold; font-size:1.2em;">🏆 成就解锁：【${ach.name}】！</span>`, 'log-reward');
+                if (ach.reward.sp) this.state.sp += ach.reward.sp;
+                for (const matId in ach.reward) { if (matId !== 'sp' && this.state.materials[matId]) this.state.materials[matId].count += ach.reward[matId]; }
+                this.updateAndRender();
+            }
+        });
+    },
+
+    // ==================== 存档系统 ====================
+    saveGame() {
+        try {
+            this.state.lastSave = Date.now();
+            localStorage.setItem('DivineSwordSave_v3', JSON.stringify(this.state));
+            this.saveToSlot('auto');
+            addLog("游戏已自动保存！", 'log-auto');
+        } catch { addLog("保存失败！", 'log-normal'); }
+    },
+    saveToSlot(slotId) {
+        try {
+            localStorage.setItem(`DivineSwordSlot_${slotId}`, JSON.stringify(this.state));
+            localStorage.setItem(`DivineSwordSlot_${slotId}_time`, new Date().toLocaleString());
+        } catch {}
+    },
+    loadFromSlot(slotId) {
+        const data = localStorage.getItem(`DivineSwordSlot_${slotId}`);
+        if (!data) { addLog(`存档槽位 [${slotId}] 为空！`, 'log-normal'); return false; }
+        try {
+            this.state = this.deepMerge(this._createDefaultState(), JSON.parse(data));
+            this._migrateState();
+            this.state.autoSettings.fight = false; this.state.autoSettings.explore = false;
+            addLog(`已从存档槽位 [${slotId}] 加载！`, 'log-reward');
+            this.updateAndRender(); Renderer.updateAutoButtons(this.state); return true;
+        } catch { addLog(`加载槽位 [${slotId}] 失败！`, 'log-normal'); return false; }
+    },
+    deepMerge(target, source) {
+        const out = JSON.parse(JSON.stringify(target));
+        for (const key in source) {
+            if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) { out[key] = { ...out[key], ...source[key] }; }
+            else { out[key] = source[key]; }
+        }
+        return out;
+    },
+    loadGame() {
+        const save = localStorage.getItem('DivineSwordSave_v3');
+        if (save) { try { this.state = this.deepMerge(this._createDefaultState(), JSON.parse(save)); addLog("存档加载成功！", 'log-reward'); } catch { addLog("存档解析失败，使用默认值", 'log-normal'); } }
+    },
+    newGame() {
+        UIManager.showConfirm("确定要开始新游戏吗？当前进度将丢失！", () => {
+            localStorage.removeItem('DivineSwordSave_v3');
+            ['slot1','slot2','slot3','auto'].forEach(s => { localStorage.removeItem(`DivineSwordSlot_${s}`); localStorage.removeItem(`DivineSwordSlot_${s}_time`); });
+            location.reload();
+        });
+    },
+
+    // ==================== 导入/导出 ====================
+    exportSaveToFile() {
+        try {
+            const data = JSON.stringify(this.state, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url;
+            a.download = `神剑仙域存档_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            addLog("存档已导出为 JSON 文件！", 'log-reward');
+        } catch { addLog("导出失败！", 'log-normal'); }
+    },
+    importSaveFromFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                UIManager.showConfirm(`确认导入此存档？当前进度将被覆盖。<br><small>${file.name} (${(file.size/1024).toFixed(1)} KB)</small>`, () => {
+                    this.state = this.deepMerge(this._createDefaultState(), data);
+                    this._migrateState();
+                    this.state.autoSettings.fight = false; this.state.autoSettings.explore = false;
+                    this.updateAndRender(); Renderer.updateAutoButtons(this.state);
+                    addLog("存档导入成功！", 'log-reward');
+                    UIManager.closeModal('save-modal');
+                });
+            } catch { addLog("存档文件格式错误！", 'log-normal'); }
+        };
+        reader.readAsText(file);
+    },
+
+    // ==================== 公会系统（UI 桥接） ====================
+    createGuildFromUI() {
+        const name = document.getElementById('guild-create-name')?.value;
+        const result = GuildSystem.createGuild(this.state, name);
+        if (result.ok) { addLog(result.msg, 'log-guild'); this.checkAchievements(); }
+        else { addLog(result.msg, 'log-normal'); }
+        this.updateAndRender();
+        Renderer.renderGuildPanel(this.state);
+    },
+    joinGuildFromUI(guildId) {
+        const result = GuildSystem.joinGuild(this.state, guildId);
+        if (result.ok) { addLog(result.msg, 'log-guild'); this.checkAchievements(); }
+        else { addLog(result.msg, 'log-normal'); }
+        this.updateAndRender(); Renderer.renderGuildPanel(this.state);
+    },
+    leaveGuildFromUI() {
+        const result = GuildSystem.leaveGuild(this.state);
+        addLog(result.msg, result.ok ? 'log-guild' : 'log-normal');
+        this.updateAndRender(); Renderer.renderGuildPanel(this.state);
+    },
+    donateFromUI(matId, amount) {
+        const result = GuildSystem.donateMaterial(this.state, matId, amount);
+        if (result.ok) { addLog(result.msg, 'log-guild'); this.checkAchievements(); }
+        else { addLog(result.msg, 'log-normal'); }
+        this.updateAndRender(); Renderer.renderGuildPanel(this.state);
+    },
+    upgradeGuildTechFromUI(techId) {
+        const result = GuildSystem.upgradeTech(this.state, techId);
+        addLog(result.msg, result.ok ? 'log-guild' : 'log-normal');
+        this.updateAndRender(); Renderer.renderGuildPanel(this.state);
+    },
+
+    // ==================== 组队副本（UI 桥接） ====================
+    createRaidFromUI(raidId) {
+        const result = RaidSystem.createRaid(this.state, raidId);
+        addLog(result.msg, result.ok ? 'log-raid' : 'log-normal');
+        this.updateAndRender(); Renderer.renderRaidPanel(this.state);
+    },
+    joinRaidFromUI(raidInstanceId) {
+        const result = RaidSystem.joinRaid(this.state, raidInstanceId);
+        addLog(result.msg, result.ok ? 'log-raid' : 'log-normal');
+        this.updateAndRender(); Renderer.renderRaidPanel(this.state);
+    },
+    attackRaidFromUI(raidInstanceId) {
+        const result = RaidSystem.attackRaidBoss(this.state, raidInstanceId);
+        if (result.finished) {
+            addLog(result.msg, 'log-raid');
+            this.checkAchievements();
+        } else { addLog(result.msg, 'log-raid'); }
+        this.updateAndRender(); Renderer.renderRaidPanel(this.state);
+    },
+    claimRaidFromUI(raidInstanceId) {
+        const result = RaidSystem.claimRaidReward(this.state, raidInstanceId);
+        if (result.ok) { addLog(result.msg, 'log-reward'); this.checkAchievements(); }
+        else { addLog(result.msg, 'log-normal'); }
+        this.updateAndRender(); Renderer.renderRaidPanel(this.state);
+    },
+
+    // ==================== 交易/赠送（UI 桥接） ====================
+    sendGiftFromUI() {
+        const target = document.getElementById('gift-target')?.value;
+        const matId = document.getElementById('gift-mat')?.value;
+        const amount = parseInt(document.getElementById('gift-amount')?.value) || 1;
+        const message = document.getElementById('gift-msg')?.value || '';
+        const result = TradeSystem.sendGift(this.state, target, matId, amount, message);
+        if (result.ok) { addLog(result.msg, 'log-trade'); this.checkAchievements(); }
+        else { addLog(result.msg, 'log-normal'); }
+        this.updateAndRender(); Renderer.renderTradePanel(this.state);
+    },
+    acceptGiftFromUI(giftId) {
+        const result = TradeSystem.acceptGift(this.state, giftId);
+        addLog(result.msg, result.ok ? 'log-trade' : 'log-normal');
+        this.updateAndRender(); Renderer.renderTradePanel(this.state);
+    },
+    acceptTradeFromUI(tradeId) {
+        const result = TradeSystem.acceptTrade(this.state, tradeId);
+        if (result.ok) { addLog(result.msg, 'log-trade'); this.checkAchievements(); }
+        else { addLog(result.msg, 'log-normal'); }
+        this.updateAndRender(); Renderer.renderTradePanel(this.state);
+    },
+    rejectTradeFromUI(tradeId) {
+        TradeSystem.rejectTrade(this.state, tradeId);
+        this.updateAndRender(); Renderer.renderTradePanel(this.state);
+    },
+    deleteMessageFromUI(msgId) {
+        TradeSystem.deleteMessage(this.state, msgId);
+        this.updateAndRender(); Renderer.renderTradePanel(this.state);
+    },
+
+    // ==================== 自动化开关 ====================
+    toggleAutoFight() {
+        const s = this.state.autoSettings;
+        s.fight = !s.fight;
+        if (s.fight) { s.fightInterval = Math.max(100, Math.min(5000, parseInt(document.getElementById('auto-fight-interval').value) || 500)); addLog(`⚡ 自动战斗已开启 (间隔${s.fightInterval}ms)`, 'log-auto'); }
+        else { addLog("⚡ 自动战斗已停止", 'log-auto'); }
+        Renderer.updateAutoButtons(this.state);
+    },
+    toggleAutoExplore() {
+        const s = this.state.autoSettings;
+        s.explore = !s.explore;
+        if (s.explore) { if (this.state.stamina <= 0) { addLog("体力不足！", 'log-normal'); s.explore = false; } else { addLog("🗺️ 自动探索已开启", 'log-auto'); } }
+        else { addLog("🗺️ 自动探索已停止", 'log-auto'); }
+        Renderer.updateAutoButtons(this.state);
+    },
+
+    // ==================== 辅助 ====================
+    updateAndRender() { this.updateQuests(); Renderer.renderAll(this.state); },
+};
+
+// 暴露到全局（供 onclick 使用）
+const _global = typeof window !== 'undefined' ? window : global;
+_global.Game = Game;
+_global.addLog = addLog;
+_global.LogSystem = LogSystem;
+_global.UIManager = UIManager;
+_global.Renderer = Renderer;
+_global.Effects = Effects;
+_global.Mechanics = Mechanics;
+_global.GuildSystem = GuildSystem;
+_global.RaidSystem = RaidSystem;
+_global.TradeSystem = TradeSystem;
+_global.LeaderboardSystem = LeaderboardSystem;
+_global.AutoSystem = AutoSystem;
+
+
+        // ====== 启动 & 全局绑定 ======
+        window.addEventListener('DOMContentLoaded', () => { Game.init(); });
+
+        // 注册 Service Worker（用 Blob URL 内联 SW，无需外部文件）
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                try {
+                    const swCode = "// ============================================================\n//  service-worker.js — 离线缓存 & 安装到桌面\n//  策略：App Shell 模型（核心文件缓存优先，动态资源按需缓存）\n// ============================================================\n\nconst CACHE_NAME = 'divine-sword-v1';\nconst CORE_ASSETS = [\n    './index.html',\n    './manifest.json',\n    './js/game.js',\n    './js/data.js',\n    './js/mechanics.js',\n    './js/effects.js',\n    './js/log.js',\n    './js/ui.js',\n    './js/renderer.js',\n    './js/guild.js',\n    './js/icons.js',\n];\n\n// ---------- 安装：预缓存核心文件 ----------\nself.addEventListener('install', (event) => {\n    event.waitUntil(\n        caches.open(CACHE_NAME).then((cache) => {\n            console.log('[SW] 缓存核心文件...');\n            return cache.addAll(CORE_ASSETS);\n        }).then(() => self.skipWaiting())\n    );\n});\n\n// ---------- 激活：清理旧缓存 ----------\nself.addEventListener('activate', (event) => {\n    event.waitUntil(\n        caches.keys().then((keys) => {\n            return Promise.all(\n                keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))\n            );\n        }).then(() => self.clients.claim())\n    );\n});\n\n// ---------- 请求拦截：缓存优先 + 网络回退 ----------\nself.addEventListener('fetch', (event) => {\n    const req = event.request;\n    if (req.method !== 'GET') return;\n\n    event.respondWith(\n        caches.match(req).then((cached) => {\n            if (cached) return cached;\n            return fetch(req).then((response) => {\n                // 动态缓存新资源（JS/CSS/HTML/JSON）\n                if (response.ok && (req.url.includes('/js/') || req.url.endsWith('.json') || req.url.endsWith('.html'))) {\n                    const copy = response.clone();\n                    caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));\n                }\n                return response;\n            }).catch(() => {\n                // 离线兜底：返回缓存的 index.html\n                if (req.mode === 'navigate') {\n                    return caches.match('./index.html');\n                }\n            });\n        })\n    );\n});\n";
+                    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                    const swUrl = URL.createObjectURL(swBlob);
+                    navigator.serviceWorker.register(swUrl)
+                        .then((reg) => console.log('[PWA] SW registered (inline blob):', reg.scope))
+                        .catch((err) => console.log('[PWA] SW failed:', err));
+                } catch(e) { console.log('[PWA] Blob SW not supported, skipping'); }
+            });
+        }
+
+        // 动态注入 manifest <link>（内联 data URI）
+        (function injectManifest() {
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = "data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%E7%A5%9E%E5%89%91%E4%BB%99%E5%9F%9F%20%C2%B7%20%E5%90%9E%E5%99%AC%E4%B8%8E%E7%A7%98%E5%89%91%22%2C%22short_name%22%3A%22%E7%A5%9E%E5%89%91%E4%BB%99%E5%9F%9F%22%2C%22description%22%3A%22%E4%B8%80%E6%AC%BE%E6%94%BE%E7%BD%AE%2F%E5%85%BB%E6%88%90%E5%B0%8F%E6%B8%B8%E6%88%8F%E2%80%94%E2%80%94%E9%94%BB%E9%80%A0%E7%A5%9E%E5%89%91%E3%80%81%E5%90%9E%E5%99%AC%E5%BA%9F%E6%96%99%E3%80%81%E6%8E%A2%E7%B4%A2%E5%9C%B0%E5%9B%BE%E3%80%81%E6%8C%91%E6%88%98%E4%B8%96%E7%95%8CBOSS%E3%80%81%E7%BB%84%E5%BB%BA%E5%85%AC%E4%BC%9A%E3%80%81%E4%BA%A4%E6%98%93%E8%A3%85%E5%A4%87%22%2C%22start_url%22%3A%22.%2Findex.html%22%2C%22scope%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22theme_color%22%3A%22%230f0c29%22%2C%22background_color%22%3A%22%230f0c29%22%2C%22categories%22%3A%5B%22games%22%2C%22entertainment%22%5D%2C%22icons%22%3A%5B%7B%22src%22%3A%22.%2Ficon-192.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%2C%7B%22src%22%3A%22.%2Ficon-512.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%2C%7B%22src%22%3A%22.%2Ficon-192.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22maskable%22%7D%2C%7B%22src%22%3A%22.%2Ficon-512.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22maskable%22%7D%5D%7D";
+            document.head.appendChild(link);
+        })();
+
+        // 全局快捷键
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') { e.preventDefault(); Game.attackMonster(); }
+            if (e.code === 'KeyB' && e.ctrlKey) { e.preventDefault(); Game.attackBoss(); }
+        });
+
+        // Tab 切换
+        window.switchSocialTab = function(tab, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            ['guild','raid','trade','leaderboard'].forEach(t => {
+                const el = document.getElementById(t + '-body');
+                if (el) el.style.display = (t === tab) ? 'block' : 'none';
+            });
+            if (tab === 'guild') Renderer.renderGuildPanel(Game.state);
+            if (tab === 'raid') Renderer.renderRaidPanel(Game.state);
+            if (tab === 'trade') Renderer.renderTradePanel(Game.state);
+            if (tab === 'leaderboard') Renderer.renderLeaderboard(Game.state);
+        };
+
+        // 日志筛选
+        window.setLogFilter = function(filter, btnEl) {
+            document.querySelectorAll('.log-filter-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+            LogSystem.setFilter(filter);
+        };
+        window.exportLogCSV = function() { LogSystem.exportCSV(); };
+
+        // 存档管理
+        window.openSaveModal = function() { UIManager.openSaveSlotsPanel(); UIManager.openModal('save-modal'); };
+
+        // PWA 安装提示
+        let deferredPrompt = null;
+        const installBanner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+        const installClose = document.getElementById('pwa-install-close');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (installBanner) installBanner.style.display = 'flex';
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('[PWA] Install outcome:', outcome);
+                deferredPrompt = null;
+                if (installBanner) installBanner.style.display = 'none';
+            });
+        }
+
+        if (installClose) {
+            installClose.addEventListener('click', () => {
+                if (installBanner) installBanner.style.display = 'none';
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            console.log('[PWA] App installed!');
+            if (installBanner) installBanner.style.display = 'none';
+        });
+    
+
+        // ==================== 云端 UI 逻辑 ====================
+        window.CloudUI = {
+            async init() {
+                const ok = await CloudSync.init();
+                if (ok) {
+                    // 尝试用本地缓存的昵称自动登录
+                    const cached = localStorage.getItem('DivineSword_CloudNick');
+                    if (cached) {
+                        try {
+                            await CloudSync.loginByNickname(cached);
+                            this.onLoginSuccess(cached, true);
+                            return;
+                        } catch(e) { localStorage.removeItem('DivineSword_CloudNick'); }
+                    }
+                }
+                // 没连上或没缓存 → 显示登录框
+                document.getElementById('cloud-login-overlay').style.display = 'flex';
+                this.updateStatusUI();
+            },
+
+            async tryLogin() {
+                const input = document.getElementById('cloud-nickname-input');
+                const nick = input.value.trim();
+                if (!nick) { alert('请输入昵称'); return; }
+                if (nick.length > 16) { alert('昵称最多16字'); return; }
+
+                const overlay = document.getElementById('cloud-login-overlay');
+                overlay.querySelector('p').textContent = '连接中…';
+
+                const result = await CloudSync.loginByNickname(nick);
+                if (result.online) {
+                    localStorage.setItem('DivineSword_CloudNick', nick);
+                    // 尝试拉取云端存档
+                    const dl = await CloudSync.downloadSave();
+                    if (dl.ok && dl.state) {
+                        const use = confirm(`☁️ 发现云端存档（${new Date(dl.updatedAt).toLocaleString()}）\n点击「确定」下载云端存档，点击「取消」保留本地存档并上传`);
+                        if (use) {
+                            Game.state = Game.deepMerge(Game._createDefaultState(), dl.state);
+                            Game._migrateState();
+                            addLog('☁️ 已下载云端存档', 'log-reward');
+                        } else {
+                            await CloudSync.uploadSave(Game.state);
+                            addLog('☁️ 本地存档已上传至云端', 'log-reward');
+                        }
+                    } else {
+                        // 没有云端存档，上传当前
+                        await CloudSync.uploadSave(Game.state);
+                        addLog('☁️ 云端无存档，已上传当前进度', 'log-reward');
+                    }
+                    this.onLoginSuccess(nick, true);
+                } else {
+                    // 离线模式
+                    localStorage.setItem('DivineSword_CloudNick', nick);
+                    this.onLoginSuccess(nick, false);
+                }
+            },
+
+            enterOffline() {
+                const input = document.getElementById('cloud-nickname-input');
+                const nick = (input.value.trim()) || '旅人' + Math.floor(Math.random()*999);
+                localStorage.setItem('DivineSword_CloudNick', nick);
+                this.onLoginSuccess(nick, false);
+                addLog('⚠️ 离线模式：存档仅保存在本设备', 'log-normal');
+            },
+
+            onLoginSuccess(nick, online) {
+                document.getElementById('cloud-login-overlay').style.display = 'none';
+                document.getElementById('cloud-status-text').textContent = online
+                    ? `☁️ ${nick}（已同步）`
+                    : `📱 ${nick}（离线）`;
+                const dot = document.getElementById('cloud-dot');
+                if (online) dot.classList.add('online'); else dot.classList.remove('online');
+                document.getElementById('cloud-btn-sync').style.display = online ? '' : 'none';
+
+                // 启动自动保存（在线时每30秒同步）
+                if (online) {
+                    CloudSync.startAutoSave(() => Game.state, 30000);
+                    addLog(`☁️ 已连接云端，欢迎 ${nick}！`, 'log-reward');
+                }
+
+                // 重新渲染
+                Game.updateAndRender();
+            },
+
+            showLogin() {
+                document.getElementById('cloud-login-overlay').style.display = 'flex';
+                document.getElementById('cloud-nickname-input').value = '';
+                document.getElementById('cloud-nickname-input').focus();
+            },
+
+            async manualSync() {
+                if (!CloudSync.isOnline()) { addLog('⚠️ 当前离线，无法同步', 'log-normal'); return; }
+                const r = await CloudSync.uploadSave(Game.state);
+                if (r.ok) {
+                    addLog('☁️ 手动同步成功！', 'log-reward');
+                    this.updateStatusUI();
+                } else {
+                    addLog('⚠️ 同步失败：' + r.reason, 'log-normal');
+                }
+            },
+
+            updateStatusUI() {
+                const online = CloudSync.isOnline();
+                const nick = CloudSync.getNickname();
+                const lastSync = CloudSync.getLastSync();
+                const dot = document.getElementById('cloud-dot');
+                const txt = document.getElementById('cloud-status-text');
+                if (online && nick) {
+                    dot.classList.add('online');
+                    txt.textContent = lastSync
+                        ? `☁️ ${nick}（${lastSync.toLocaleTimeString()}）`
+                        : `☁️ ${nick}（已连接）`;
+                } else if (nick) {
+                    dot.classList.remove('online');
+                    txt.textContent = `📱 ${nick}（离线）`;
+                }
+            },
+        };
+
+        // ==================== 钩入 Game 存档 ====================
+        // 每次自动保存时也尝试云端上传
+        const _origSaveGame = Game.saveGame.bind(Game);
+        Game.saveGame = function() {
+            _origSaveGame();
+            // 后台静默上传
+            if (CloudSync.isOnline()) {
+                CloudSync.uploadSave(this.state).then(r => {
+                    if (r.ok) CloudUI.updateStatusUI();
+                }).catch(()=>{});
+            }
+        };
+
+        // BOSS 伤害提交排行榜
+        const _origAttackBoss = Game.attackBoss.bind(Game);
+        Game.attackBoss = function() {
+            const boss = this.state.boss;
+            const beforeHP = boss.hp;
+            _origAttackBoss();
+            const dmg = beforeHP - this.state.boss.hp;
+            if (dmg > 0 && CloudSync.isOnline()) {
+                CloudSync.submitLeaderboard(boss.name, dmg).catch(()=>{});
+            }
+        };
+
+        // 公会数据同步：每次公会变动时上传
+        const _origCreateGuild = Game.createGuildFromUI.bind(Game);
+        Game.createGuildFromUI = async function() {
+            _origCreateGuild();
+            if (CloudSync.isOnline()) {
+                // 上传整个公会字典
+                const all = GuildSystem._loadAllGuilds();
+                for (const g of Object.values(all)) {
+                    await CloudSync.updateGuild(g.name, g).catch(()=>{});
+                }
+            }
+        };
+
+        // ==================== 启动云端 ====================
+        CloudUI.init();
+
+        // 定时刷新状态
+        setInterval(() => CloudUI.updateStatusUI(), 10000);
+
+    </script>
+
+    <!-- PWA 安装引导横幅 -->
+    <div id="pwa-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:linear-gradient(90deg,#1a1a3e,#302b63);border-top:2px solid #ffd700;padding:12px 16px;z-index:9999;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 -4px 20px rgba(0,0,0,0.5);">
+        <div style="font-size:0.9rem;color:#ffd700;">📲 安装到主屏幕，体验更流畅！</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <button id="pwa-install-btn" style="background:#ffd700;color:#0f0c29;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer;font-size:0.85rem;">安装</button>
+            <button id="pwa-install-close" style="background:transparent;color:#aaa;border:1px solid #555;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:0.85rem;">✕</button>
+        </div>
+    </div>
+</body>
+</html>
